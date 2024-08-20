@@ -22,29 +22,23 @@ import org.jetbrains.kotlin.compiler.plugin.CliOption
 import org.jetbrains.kotlin.compiler.plugin.CommandLineProcessor
 import org.jetbrains.kotlin.config.CompilerConfiguration
 
+@Suppress("unused")
 @AutoService(CommandLineProcessor::class)
 class MissingAnnotationsTherapistCommandLineProcessor : CommandLineProcessor {
-  override val pluginId: String = "com.bnorm.missing-annotations-therapist"
+  override val pluginId: String = "com.shalaga44.annotations.missing-annotations-therapist"
 
   override val pluginOptions: Collection<CliOption> = listOf(
     CliOption(
-      optionName = "function",
-      valueDescription = "function full-qualified name",
-      description = "fully qualified path of function to intercept",
+      optionName = "annotations",
+      valueDescription = "fully-qualified annotations names",
+      description = "fully-qualified annotations names",
       required = false, // TODO required for Kotlin/JS
       allowMultipleOccurrences = true,
     ),
     CliOption(
-      optionName = "annotation",
-      valueDescription = "annotation fully-qualified names",
-      description = "fully-qualified annotation names to add",
-      required = false, // TODO required for Kotlin/JS
-      allowMultipleOccurrences = true,
-    ),
-    CliOption(
-      optionName = "packageTarget",
-      valueDescription = "package target fully-qualified names",
-      description = "fully-qualified package target names to look under",
+      optionName = "packagesTargets",
+      valueDescription = "fully-qualified packages targets names",
+      description = "fully-qualified packages targets names",
       required = false, // TODO required for Kotlin/JS
       allowMultipleOccurrences = true,
     ),
@@ -55,10 +49,11 @@ class MissingAnnotationsTherapistCommandLineProcessor : CommandLineProcessor {
     value: String,
     configuration: CompilerConfiguration,
   ) {
+    println("option = ${option}")
+    println("option.optionName = ${option.optionName}")
     return when (option.optionName) {
-      "function" -> configuration.add(KEY_FUNCTIONS, value)
-      "annotation" -> configuration.add(KEY_ANNOTATION, value)
-      "packageTarget" -> configuration.add(KEY_PACKAGE_TARGET, value)
+      "annotations" -> configuration.add(KEY_ANNOTATIONS, value)
+      "packagesTargets" -> configuration.add(KEY_PACKAGE_TARGETS, value)
       else -> error("Unexpected config option ${option.optionName}")
     }
   }

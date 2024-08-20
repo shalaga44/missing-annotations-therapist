@@ -14,28 +14,18 @@
  * limitations under the License.
  */
 
-package com.shalaga44.annotations
+package com.shalaga44.plugin
 
+import com.project.common.dto.Hello
+import org.junit.jupiter.api.Assertions.assertTrue
+import kotlin.test.Test
 
-data class Annotation(
-  val fqName: String,
-) {
-  val shortName = fqName.substringAfterLast(".")
-}
-
-data class PackageTarget(
-  val fqName: String,
-) {
-  val shortName = fqName.substringAfterLast(".")
-}
-
-data class Annotate(
-  var annotationsToAdd: List<Annotation>,
-  var annotationsTarget: List<kotlin.annotation.AnnotationTarget> = listOf(),
-  var packageTarget: List<PackageTarget>,
-  var sourceSets: List<String> = listOf(),
-)
-
-open class MissingAnnotationsTherapistGradleExtension {
-  var annotations: List<Annotate> = listOf()
+class JvmMissingAnnotationsTherapistTest {
+  @Test
+  fun assert() {
+    val hello = Hello("Therapist?")
+    val annotations = hello::class.annotations.map { it::class }
+    assertTrue(annotations.isNotEmpty())
+//    assertSame(annotations, listOf(MyDto::class.simpleName))
+  }
 }

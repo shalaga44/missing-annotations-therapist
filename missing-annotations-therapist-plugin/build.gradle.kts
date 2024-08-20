@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
   kotlin("jvm")
   kotlin("kapt")
-  id("org.jetbrains.dokka")
+//  id("org.jetbrains.dokka")
 
   signing
   `maven-publish`
@@ -11,6 +11,8 @@ plugins {
 }
 
 dependencies {
+  
+
   compileOnly("org.jetbrains.kotlin:kotlin-compiler-embeddable")
 
   kapt("com.google.auto.service:auto-service:1.0.1")
@@ -42,17 +44,17 @@ tasks.register("sourcesJar", Jar::class) {
   dependsOn(tasks.classes)
 }
 
-tasks.register("dokkaJar", Jar::class) {
+/*tasks.register("dokkaJar", Jar::class) {
   group = "documentation"
   description = "Assembles Kotlin docs with Dokka"
 
   archiveClassifier.set("javadoc")
   from(tasks.dokkaHtml)
   dependsOn(tasks.dokkaHtml)
-}
-afterEvaluate {
+}*/
+/*afterEvaluate {
   tasks["dokkaHtml"].dependsOn(tasks.getByName("kaptKotlin"))
-}
+}*/
 signing {
   setRequired(provider { gradle.taskGraph.hasTask("publish") })
   sign(publishing.publications)
@@ -63,11 +65,11 @@ publishing {
     create<MavenPublication>("default") {
       from(components["java"])
       artifact(tasks["sourcesJar"])
-      artifact(tasks["dokkaJar"])
+//      artifact(tasks["dokkaJar"])
 
       pom {
         name.set(project.name)
-        description.set("Kotlin compiler plugin to enable power assertions in the Kotlin programming language")
+        description.set("Kotlin Compiler Plugin that automatically adds missing annotations to your codebase based on configurable criteria")
         url.set("https://github.com/bnorm/missing-annotations-therapist")
 
         licenses {
@@ -82,8 +84,8 @@ publishing {
         }
         developers {
           developer {
-            name.set("Brian Norman")
-            url.set("https://github.com/bnorm")
+            name.set("Shalaga")
+            url.set("https://github.com/shalaga")
           }
         }
       }

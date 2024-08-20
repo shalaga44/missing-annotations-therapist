@@ -4,8 +4,8 @@
 
 
 > [!IMPORTANT]
-> It's not working yet! I just wanted to save my code in git, 
-> so I can come back  to it latter.
+> It's working now! but still a FIRST draft!,
+> so think twice before using it be careful.
 
 
 Kotlin Compiler Plugin that automatically adds missing annotations to your codebase based on configurable criteria. This
@@ -114,3 +114,6 @@ target {
 
 A working example is will be provided soon
 
+A working example is [available][missing-annotations-therapist-example] in this repository in the
+sample directory.
+[[missing-annotations-therapist-example]: https://github.com/shalaga44/missing-annotations-therapist/tree/main/missing-annotations-therapist-example]

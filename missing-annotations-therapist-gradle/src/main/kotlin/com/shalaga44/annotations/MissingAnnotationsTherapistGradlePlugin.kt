@@ -16,7 +16,8 @@ class MissingAnnotationsTherapistGradlePlugin : KotlinCompilerPluginSupportPlugi
   override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean {
     val project = kotlinCompilation.target.project
     val extension = project.extensions.getByType(MissingAnnotationsTherapistGradleExtension::class.java)
-    return extension.excludedSourceSets.none { it == kotlinCompilation.defaultSourceSet.name }
+    val currentSourceSet = kotlinCompilation.defaultSourceSet.name
+    return extension.annotations.map { it.sourceSets }.flatten().any { it == currentSourceSet }
   }
 
   override fun getCompilerPluginId(): String = "com.shalaga44.annotations.missing-annotations-therapist"
@@ -35,11 +36,13 @@ class MissingAnnotationsTherapistGradlePlugin : KotlinCompilerPluginSupportPlugi
     return project.provider {
 
       extension.annotations.map { it.annotationsToAdd.map { it.fqName } }.flatten().map {
-        SubpluginOption(key = "annotation", value = it)
-      }
-      extension.annotations.map { it.packageTarget.map { it.fqName } }.flatten().map {
-        SubpluginOption(key = "packageTarget", value = it)
-      }
+        System.err.println("annotationsToAdd = ${it}")
+        SubpluginOption(key = "annotations", value = it)
+      } +
+        extension.annotations.map { it.packageTarget.map { it.fqName } }.flatten().map {
+          System.err.println("packageTargets = ${it}")
+          SubpluginOption(key = "packagesTargets", value = it)
+        }
     }
   }
 }

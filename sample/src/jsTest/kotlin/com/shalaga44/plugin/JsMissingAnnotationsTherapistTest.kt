@@ -14,28 +14,15 @@
  * limitations under the License.
  */
 
-package com.shalaga44.annotations
+package com.shalaga44.plugin
 
+import kotlin.test.Test
 
-data class Annotation(
-  val fqName: String,
-) {
-  val shortName = fqName.substringAfterLast(".")
-}
-
-data class PackageTarget(
-  val fqName: String,
-) {
-  val shortName = fqName.substringAfterLast(".")
-}
-
-data class Annotate(
-  var annotationsToAdd: List<Annotation>,
-  var annotationsTarget: List<kotlin.annotation.AnnotationTarget> = listOf(),
-  var packageTarget: List<PackageTarget>,
-  var sourceSets: List<String> = listOf(),
-)
-
-open class MissingAnnotationsTherapistGradleExtension {
-  var annotations: List<Annotate> = listOf()
+class JsMissingAnnotationsTherapistTest {
+  @Test
+  fun assert() {
+    /*val hello = Hello("Hehe")
+    val annotations = hello::class.annotations
+    assertTrue(annotations.isNotEmpty())*/
+  }
 }

@@ -4,8 +4,9 @@ import org.jmailen.gradle.kotlinter.tasks.FormatTask
 import org.jmailen.gradle.kotlinter.tasks.LintTask
 
 plugins {
-  kotlin("jvm") version "1.8.20" apply false
-  id("org.jetbrains.dokka") version "1.8.10" apply false
+  kotlin("jvm") version "2.0.0" apply false
+  kotlin("multiplatform") version "2.0.0" apply false
+//  id("org.jetbrains.dokka") version "1.8.10" apply false
   id("com.gradle.plugin-publish") version "1.1.0" apply false
   id("com.github.gmazzo.buildconfig") version "3.1.0" apply false
   id("org.jmailen.kotlinter") version "3.14.0" apply false
