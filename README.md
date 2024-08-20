@@ -114,6 +114,6 @@ target {
 
 A working example is will be provided soon
 
-A working example is [available][missing-annotations-therapist-example] in this repository in the
+A working example is [[available]](https://github.com/shalaga44/missing-annotations-therapist/tree/main/sample) in this repository in the
 sample directory.
-[[missing-annotations-therapist-example]: https://github.com/shalaga44/missing-annotations-therapist/tree/main/missing-annotations-therapist-example]
+
