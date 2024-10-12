@@ -537,10 +537,11 @@ private fun <T : FirDeclaration> evaluateConditions(
 
 
     val inheritanceCheck = condition.inheritance?.let { inheritance ->
-      val superclassFqName = inheritance.superclass
+      val superclassFqName = inheritance.superclass?.toClassId()
       val actualSuperclasses = when (declaration) {
-        is FirRegularClass -> declaration.superConeTypes.map { it }
-          .map { it.lookupTag.toSymbol(session)?.fir?.nameAsString }
+        is FirRegularClass ->
+          declaration.superConeTypes.map { it }
+            .map { it.lookupTag.toSymbol(session)?.fir?.classId }
 
         else -> emptyList()
       }
