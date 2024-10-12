@@ -29,9 +29,9 @@ With the `missing-annotations-therapist` plugin configured as follows:
 configure<MissingAnnotationsTherapistGradleExtension> {
     annotations = listOf(
         Annotate(
-            annotationsToAdd = listOf(Annotation("kotlin.js.JsExport")),
+            annotationsToAdd = listOf(Annotation(fqName = "kotlin.js.JsExport")),
+            packageTarget = listOf(PackageTarget(pattern = "com.project.common.dto")),
             annotationsTarget = listOf(AnnotationTarget.CLASS),
-            packageTarget = listOf(PackageTarget("com.project.common.dto")),
             sourceSets = listOf("commonMain", "jsMain"),
         ),
     )

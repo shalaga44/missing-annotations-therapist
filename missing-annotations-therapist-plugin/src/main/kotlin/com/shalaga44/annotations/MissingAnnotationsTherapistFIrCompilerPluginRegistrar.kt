@@ -40,10 +40,9 @@ import org.jetbrains.kotlin.fir.declarations.hasAnnotation
 import org.jetbrains.kotlin.fir.declarations.utils.classId
 import org.jetbrains.kotlin.fir.declarations.utils.superConeTypes
 import org.jetbrains.kotlin.fir.expressions.FirAnnotation
-import org.jetbrains.kotlin.fir.expressions.FirAnnotationArgumentMapping
-import org.jetbrains.kotlin.fir.expressions.builder.FirAnnotationBuilder
 import org.jetbrains.kotlin.fir.expressions.builder.buildAnnotation
-import org.jetbrains.kotlin.fir.expressions.impl.FirEmptyAnnotationArgumentMapping
+import org.jetbrains.kotlin.fir.expressions.builder.buildAnnotationArgumentMapping
+import org.jetbrains.kotlin.fir.expressions.builder.buildLiteralExpression
 import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrar
 import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrarAdapter
 import org.jetbrains.kotlin.fir.extensions.FirExtensionSessionComponent
@@ -60,6 +59,7 @@ import org.jetbrains.kotlin.lexer.KtModifierKeywordToken
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
+import org.jetbrains.kotlin.name.Name
 
 
 @AutoService(CompilerPluginRegistrar::class)
@@ -285,7 +285,7 @@ internal class MissingAnnotationsTherapistExtensionFirCheckersExtension(
           if (component.enableLogging) {
             println("ClassChecker: Applying annotations to class ${declaration.name}: ${annotate.annotationsToAdd}")
           }
-          val newAnnotations = annotate.annotationsToAdd.flatMap { it.toFirAnnotation() }
+          val newAnnotations = annotate.annotationsToAdd.flatMap { it.toFirAnnotation(session, declaration) }
           declaration.replaceAnnotations(declaration.annotations + newAnnotations)
         } else {
           if (component.enableLogging) {
@@ -345,7 +345,7 @@ internal class MissingAnnotationsTherapistExtensionFirCheckersExtension(
           if (component.enableLogging) {
             println("FunctionChecker: Applying annotations to function ${declaration.name}: ${annotate.annotationsToAdd}")
           }
-          val newAnnotations = annotate.annotationsToAdd.flatMap { it.toFirAnnotation() }
+          val newAnnotations = annotate.annotationsToAdd.flatMap { it.toFirAnnotation(session, declaration) }
           declaration.replaceAnnotations(declaration.annotations + newAnnotations)
         } else {
           if (component.enableLogging) {
@@ -405,7 +405,7 @@ internal class MissingAnnotationsTherapistExtensionFirCheckersExtension(
           if (component.enableLogging) {
             println("PropertyChecker: Applying annotations to property ${declaration.name}: ${annotate.annotationsToAdd}")
           }
-          val newAnnotations = annotate.annotationsToAdd.flatMap { it.toFirAnnotation() }
+          val newAnnotations = annotate.annotationsToAdd.flatMap { it.toFirAnnotation(session, declaration) }
           declaration.replaceAnnotations(declaration.annotations + newAnnotations)
         } else {
           if (component.enableLogging) {
@@ -638,8 +638,15 @@ private fun <T> declarationHasAnnotation(declaration: T, fqName: String, session
   }
 }
 
-private fun Annotation.toFirAnnotation(): List<FirAnnotation> {
-  return listOf(createFirAnnotation(this.toFqName()))
+private fun Annotation.toFirAnnotation(session: FirSession, declaration: FirDeclaration): List<FirAnnotation> {
+  return listOf(
+    createFirAnnotation(
+      fqName = this.toFqName(),
+      parameters = parameters,
+      declarationName = declaration.nameAsString,
+      session = session,
+    ),
+  )
 }
 
 private fun Annotation.toFqName(): FqName {
@@ -649,18 +656,31 @@ private fun Annotation.toFqName(): FqName {
 
 fun createFirAnnotation(
   fqName: FqName,
-  argumentMapping: FirAnnotationArgumentMapping = FirEmptyAnnotationArgumentMapping,
-  builder: FirAnnotationBuilder.() -> Unit = {},
+  parameters: Map<String, String>,
+  declarationName: String,
+  session: FirSession,
 ): FirAnnotation = buildAnnotation {
-  this.annotationTypeRef = buildResolvedTypeRef {
+  annotationTypeRef = buildResolvedTypeRef {
     type = ConeClassLikeTypeImpl(
       lookupTag = ConeClassLikeLookupTagImpl(ClassId.topLevel(fqName)),
       typeArguments = emptyArray(),
       isNullable = false,
     )
   }
-  this.argumentMapping = argumentMapping
-  builder()
+  argumentMapping = buildAnnotationArgumentMapping {
+    parameters.forEach { (key, value) ->
+      val processedValue = value.replace("{className}", declarationName)
+      val name = Name.identifier(key)
+      mapping[name] = buildLiteralExpression(
+        source = null,
+        kind = org.jetbrains.kotlin.types.ConstantValueKind.String,
+        value = processedValue,
+        setType = true,
+      )
+
+    }
+  }
+
 }
 
 public inline fun String.toClassId(): ClassId = FqName(this).run { ClassId(parent(), shortName()) }

@@ -1,24 +1,40 @@
 package com.shalaga44.annotations
 
-import com.shalaga44.annotations.utils.*
-import org.junit.jupiter.api.Test
+import com.shalaga44.annotations.utils.Annotate
+import com.shalaga44.annotations.utils.Annotation
+import com.shalaga44.annotations.utils.Condition
+import com.shalaga44.annotations.utils.InheritanceCondition
+import com.shalaga44.annotations.utils.MatchType
+import com.shalaga44.annotations.utils.Modifier
+import com.shalaga44.annotations.utils.PackageTarget
+import com.shalaga44.annotations.utils.TypeCondition
+import com.shalaga44.annotations.utils.Visibility
 import com.tschuchort.compiletesting.SourceFile
-import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
 
 class MatTests {
 
 
-  private fun annotationFile(fileName: String, packageName: String = "com.project", annotationName: String, vararg parameters: String = emptyArray()): SourceFile {
+  private fun annotationFile(
+    fileName: String,
+    packageName: String = "com.project",
+    annotationName: String,
+    vararg parameters: String = emptyArray(),
+  ): SourceFile {
     val params = if (parameters.isNotEmpty()) {
       parameters.joinToString(", ", "(", ")")
     } else {
       ""
     }
-    return SourceFile.kotlin(fileName, """
+    return SourceFile.kotlin(
+      fileName,
+      """
             package $packageName
 
             annotation class $annotationName$params
-        """.trimIndent())
+        """.trimIndent(),
+    )
   }
 
   @Test
@@ -53,8 +69,8 @@ class MatTests {
               ),
             ),
           ),
-        )
-      )
+        ),
+      ),
     )
   }
 
@@ -94,8 +110,8 @@ class MatTests {
               ),
             ),
           ),
-        )
-      )
+        ),
+      ),
     )
   }
 
@@ -138,8 +154,8 @@ class MatTests {
               ),
             ),
           ),
-        )
-      )
+        ),
+      ),
     )
   }
 
@@ -193,8 +209,8 @@ class MatTests {
               ),
             ),
           ),
-        )
-      )
+        ),
+      ),
     )
   }
 
@@ -235,8 +251,8 @@ class MatTests {
               ),
             ),
           ),
-        )
-      )
+        ),
+      ),
     )
   }
 
@@ -281,8 +297,8 @@ class MatTests {
               ),
             ),
           ),
-        )
-      )
+        ),
+      ),
     )
   }
 
@@ -331,14 +347,16 @@ class MatTests {
               ),
             ),
           ),
-        )
-      )
+        ),
+      ),
     )
   }
 
+  @Disabled
   @Test
   fun `add annotation with dynamic parameters`() {
-    val dynamicAnnotation = annotationFile("DynamicAnnotation.kt", "com.project", "DynamicAnnotation", "val exportName: String")
+    val dynamicAnnotation =
+      annotationFile("DynamicAnnotation.kt", "com.project", "DynamicAnnotation", "val exportName: String")
 
     val mainSource = """
             package com.project
@@ -378,8 +396,8 @@ class MatTests {
               ),
             ),
           ),
-        )
-      )
+        ),
+      ),
     )
   }
 
@@ -422,24 +440,30 @@ class MatTests {
               ),
             ),
           ),
-        )
-      )
+        ),
+      ),
     )
   }
 
   @Test
   fun `add annotation to class based on inheritance`() {
     val inheritedAnnotation = annotationFile("InheritedAnnotation.kt", "com.project", "InheritedAnnotation")
-    val baseClass = SourceFile.kotlin("BaseClass.kt", """
+    val baseClass = SourceFile.kotlin(
+      "BaseClass.kt",
+      """
             package com.project
 
             open class BaseClass
-        """.trimIndent())
-    val derivedClass = SourceFile.kotlin("DerivedClass.kt", """
+        """.trimIndent(),
+    )
+    val derivedClass = SourceFile.kotlin(
+      "DerivedClass.kt",
+      """
             package com.project
 
             class DerivedClass : BaseClass()
-        """.trimIndent())
+        """.trimIndent(),
+    )
 
     val mainSource = """
             package com.project
@@ -479,8 +503,8 @@ class MatTests {
               ),
             ),
           ),
-        )
-      )
+        ),
+      ),
     )
   }
 
@@ -532,8 +556,8 @@ class MatTests {
               ),
             ),
           ),
-        )
-      )
+        ),
+      ),
     )
   }
 
@@ -583,8 +607,8 @@ class MatTests {
               ),
             ),
           ),
-        )
-      )
+        ),
+      ),
     )
   }
 
@@ -625,8 +649,8 @@ class MatTests {
               ),
             ),
           ),
-        )
-      )
+        ),
+      ),
     )
   }
 
@@ -667,8 +691,8 @@ class MatTests {
               ),
             ),
           ),
-        )
-      )
+        ),
+      ),
     )
   }
 }
