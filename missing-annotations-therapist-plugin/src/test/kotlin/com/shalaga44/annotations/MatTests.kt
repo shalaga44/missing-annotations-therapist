@@ -158,7 +158,7 @@ class MatTests {
 
             fun main() { 
                 val user = User()
-                val annotations = user::class.memberProperties.find { it.name == "isActive" }?.annotations
+                val annotations = user::class.memberProperties.find { it.nameAsString == "isActive" }?.annotations
                 assertTrue(annotations?.any { it.annotationClass.simpleName == "PropertyValidation" } == true)
             }
         """.trimIndent()

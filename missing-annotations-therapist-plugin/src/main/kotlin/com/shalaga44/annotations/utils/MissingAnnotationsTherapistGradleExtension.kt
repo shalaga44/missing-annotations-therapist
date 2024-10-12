@@ -19,7 +19,7 @@ package com.shalaga44.annotations.utils
 /**
  * Represents an annotation to be added.
  *
- * @property fqName Fully qualified name of the annotation.
+ * @property fqName Fully qualified nameAsString of the annotation.
  * @property parameters Key-value pairs for annotation parameters. Supports dynamic templates.
  */
 data class Annotation(
@@ -51,7 +51,7 @@ data class PackageTarget(
  * @property annotationsAbsence Annotations that must be absent.
  * @property visibility Visibility modifier required (PUBLIC, PRIVATE, etc.).
  * @property modifiers Additional modifiers required (OPEN, FINAL, etc.).
- * @property namePattern Regex pattern that the name must match.
+ * @property namePattern Regex pattern that the nameAsString must match.
  * @property inheritance Conditions based on superclass and interfaces.
  * @property typeCondition Conditions based on type names (for properties).
  * @property customPredicate Custom logic for complex conditions.
@@ -70,7 +70,7 @@ data class Condition(
 /**
  * Defines inheritance-based conditions.
  *
- * @property superclass Fully qualified name of the required superclass.
+ * @property superclass Fully qualified nameAsString of the required superclass.
  * @property interfaces List of fully qualified names of required interfaces.
  */
 data class InheritanceCondition(
