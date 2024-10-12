@@ -17,10 +17,12 @@ dependencies {
 
   kapt("com.google.auto.service:auto-service:1.0.1")
   compileOnly("com.google.auto.service:auto-service-annotations:1.0.1")
+  implementation("com.google.code.gson:gson:2.8.9")
 
   testImplementation(kotlin("test-junit5"))
   testImplementation("org.jetbrains.kotlin:kotlin-compiler-embeddable")
-  testImplementation("com.github.tschuchortdev:kotlin-compile-testing:1.5.0")
+//  testImplementation("com.github.tschuchortdev:kotlin-compile-testing:1.6.0")
+  testImplementation("dev.zacsweers.kctfork:core:0.5.1")
   testImplementation(enforcedPlatform("org.junit:junit-bom:5.9.1"))
 }
 
@@ -31,7 +33,7 @@ tasks.withType<KotlinCompile> {
 }
 
 tasks.withType<Test> {
-  enabled = false
+//  enabled = false
   useJUnitPlatform()
 }
 

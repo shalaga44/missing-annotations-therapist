@@ -82,9 +82,8 @@ configure<MissingAnnotationsTherapistGradleExtension> {
     Annotate(
       annotationsToAdd = listOf(Annotation("com.project.common.dto.MyDto")),
       annotationsTarget = listOf(AnnotationTarget.CLASS),
-      packageTarget = listOf(PackageTarget("com.project.common")),
+      packageTarget = listOf(PackageTarget("com.project.common.dto")),
       sourceSets = listOf("commonMain","jvmMain", "jsMain", "nativeMain"),
     ),
   )
-
 }

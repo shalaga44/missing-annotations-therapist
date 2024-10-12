@@ -10,6 +10,7 @@ dependencies {
   
   implementation(kotlin("stdlib"))
   implementation(kotlin("gradle-plugin-api"))
+  implementation("com.google.code.gson:gson:2.8.9")
 }
 
 buildConfig {
