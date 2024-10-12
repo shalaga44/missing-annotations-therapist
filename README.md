@@ -26,6 +26,7 @@ class LoginRequestDto(
 With the `missing-annotations-therapist` plugin configured as follows:
 
 ```kotlin
+
 configure<MissingAnnotationsTherapistGradleExtension> {
     annotations = listOf(
         Annotate(
@@ -59,10 +60,22 @@ plugins {
     id("com.shalaga44.annotations.missing-annotations-therapist") version "0.0.1"
 }
 ```
+Also add the Github Maven repository to your repositories to be able to use it.
+
+```kotlin
+repositories {
+    maven {
+        url = uri("https://maven.pkg.github.com/shalaga44/missing-annotations-therapist")
+    }
+}
+```
+
 
 Configure the plugin in your `build.gradle.kts` file:
 
 ```kotlin
+import dev.shalaga44.mat.*
+
 configure<MissingAnnotationsTherapistGradleExtension> {
     annotations = listOf(
         Annotate(

@@ -7,9 +7,9 @@ plugins {
 
 repositories {
   mavenLocal()
-  /*maven {
+  maven {
     url = uri("https://maven.pkg.github.com/shalaga44/missing-annotations-therapist")
-  }*/
+  }
   maven {
     url = uri("~/.m2/repository")
   }
