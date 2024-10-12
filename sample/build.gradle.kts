@@ -1,11 +1,11 @@
-import com.shalaga44.annotations.Annotate
-import com.shalaga44.annotations.Annotation
-import com.shalaga44.annotations.MissingAnnotationsTherapistGradleExtension
-import com.shalaga44.annotations.PackageTarget
+import io.github.shalaga44.Annotate
+import io.github.shalaga44.Annotation
+import io.github.shalaga44.MissingAnnotationsTherapistGradleExtension
+import io.github.shalaga44.PackageTarget
 
 plugins {
   kotlin("multiplatform") version "1.8.20"
-  id("com.shalaga44.annotations.missing-annotations-therapist") version "0.1.0-SNAPSHOT"
+  id("io.github.shalaga44.missing-annotations-therapist") version "0.1.0-SNAPSHOT"
 }
 
 repositories {

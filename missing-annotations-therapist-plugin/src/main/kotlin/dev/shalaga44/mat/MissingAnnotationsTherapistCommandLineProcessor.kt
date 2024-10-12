@@ -1,4 +1,4 @@
-package com.shalaga44.annotations
+package dev.shalaga44.mat
 
 import com.google.auto.service.AutoService
 import org.jetbrains.kotlin.compiler.plugin.AbstractCliOption

@@ -1,4 +1,6 @@
-package com.shalaga44.annotations
+@file:Suppress("unused")
+
+package dev.shalaga44.mat
 
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -14,7 +16,7 @@ class MissingAnnotationsTherapistGradlePlugin : KotlinCompilerPluginSupportPlugi
     const val COMPILER_PLUGIN_ID = "com.shalaga44.annotations.missing-annotations-therapist"
     const val PLUGIN_GROUP_ID = "com.shalaga44.annotations"
     const val PLUGIN_ARTIFACT_ID = "missing-annotations-therapist-plugin"
-    const val PLUGIN_VERSION = "1.0.0"
+    const val PLUGIN_VERSION = "0.0.1"
   }
 
   override fun apply(target: Project): Unit = with(target) {

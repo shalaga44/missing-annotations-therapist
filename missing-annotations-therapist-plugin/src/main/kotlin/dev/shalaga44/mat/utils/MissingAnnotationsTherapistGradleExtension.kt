@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.shalaga44.annotations.utils
+package dev.shalaga44.mat.utils
 
 /**
  * Represents an annotation to be added.

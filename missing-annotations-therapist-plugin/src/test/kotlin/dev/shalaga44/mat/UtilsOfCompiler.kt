@@ -1,4 +1,4 @@
-package com.shalaga44.annotations
+package dev.shalaga44.mat
 
 import com.tschuchort.compiletesting.JvmCompilationResult
 import com.tschuchort.compiletesting.KotlinCompilation
@@ -10,7 +10,7 @@ import java.lang.reflect.InvocationTargetException
 import kotlin.test.assertEquals
 
 private val DEFAULT_COMPILER_PLUGIN_REGISTRARS = arrayOf(
-  FirMissingAnnotationsTherapistCompilerPluginRegistrar(),
+  MissingAnnotationsTherapistCompilerPluginRegistrar(),
 )
 
 

@@ -1,14 +1,14 @@
-package com.shalaga44.annotations
+package dev.shalaga44.mat
 
 import com.google.auto.service.AutoService
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import com.shalaga44.annotations.utils.Annotate
-import com.shalaga44.annotations.utils.Annotation
-import com.shalaga44.annotations.utils.Condition
-import com.shalaga44.annotations.utils.MatchType
-import com.shalaga44.annotations.utils.Modifier
-import com.shalaga44.annotations.utils.Visibility
+import dev.shalaga44.mat.utils.Annotate
+import dev.shalaga44.mat.utils.Annotation
+import dev.shalaga44.mat.utils.Condition
+import dev.shalaga44.mat.utils.MatchType
+import dev.shalaga44.mat.utils.Modifier
+import dev.shalaga44.mat.utils.Visibility
 import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.descriptors.Visibilities
@@ -63,7 +63,7 @@ import org.jetbrains.kotlin.name.Name
 
 
 @AutoService(CompilerPluginRegistrar::class)
-class FirMissingAnnotationsTherapistCompilerPluginRegistrar(
+class MissingAnnotationsTherapistCompilerPluginRegistrar(
   private val args: MissingAnnotationsTherapistArgs? = null,
 ) : CompilerPluginRegistrar() {
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.shalaga44.annotations
+package dev.shalaga44.mat
 
 import kotlin.annotation.AnnotationTarget
 

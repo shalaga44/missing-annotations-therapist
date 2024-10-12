@@ -1,14 +1,14 @@
-package com.shalaga44.annotations
+package dev.shalaga44.mat
 
-import com.shalaga44.annotations.utils.Annotate
-import com.shalaga44.annotations.utils.Annotation
-import com.shalaga44.annotations.utils.Condition
-import com.shalaga44.annotations.utils.InheritanceCondition
-import com.shalaga44.annotations.utils.MatchType
-import com.shalaga44.annotations.utils.Modifier
-import com.shalaga44.annotations.utils.PackageTarget
-import com.shalaga44.annotations.utils.TypeCondition
-import com.shalaga44.annotations.utils.Visibility
+import dev.shalaga44.mat.utils.Annotate
+import dev.shalaga44.mat.utils.Annotation
+import dev.shalaga44.mat.utils.Condition
+import dev.shalaga44.mat.utils.InheritanceCondition
+import dev.shalaga44.mat.utils.MatchType
+import dev.shalaga44.mat.utils.Modifier
+import dev.shalaga44.mat.utils.PackageTarget
+import dev.shalaga44.mat.utils.TypeCondition
+import dev.shalaga44.mat.utils.Visibility
 import com.tschuchort.compiletesting.SourceFile
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -59,7 +59,7 @@ class MatTests {
       additionalSources = listOf(myDto),
       mainApplication = "com.project.MainKt",
       compilerPluginRegistrars = arrayOf(
-        FirMissingAnnotationsTherapistCompilerPluginRegistrar(
+        MissingAnnotationsTherapistCompilerPluginRegistrar(
           MissingAnnotationsTherapistArgs(
             annotations = listOf(
               Annotate(
@@ -97,7 +97,7 @@ class MatTests {
       additionalSources = listOf(myDto, serializable),
       mainApplication = "com.project.MainKt",
       compilerPluginRegistrars = arrayOf(
-        FirMissingAnnotationsTherapistCompilerPluginRegistrar(
+        MissingAnnotationsTherapistCompilerPluginRegistrar(
           MissingAnnotationsTherapistArgs(
             annotations = listOf(
               Annotate(
@@ -138,7 +138,7 @@ class MatTests {
       additionalSources = listOf(myFunctionAnnotation),
       mainApplication = "com.project.MainKt",
       compilerPluginRegistrars = arrayOf(
-        FirMissingAnnotationsTherapistCompilerPluginRegistrar(
+        MissingAnnotationsTherapistCompilerPluginRegistrar(
           MissingAnnotationsTherapistArgs(
             annotations = listOf(
               Annotate(
@@ -184,7 +184,7 @@ class MatTests {
       additionalSources = listOf(propertyValidation),
       mainApplication = "com.project.MainKt",
       compilerPluginRegistrars = arrayOf(
-        FirMissingAnnotationsTherapistCompilerPluginRegistrar(
+        MissingAnnotationsTherapistCompilerPluginRegistrar(
           MissingAnnotationsTherapistArgs(
             annotations = listOf(
               Annotate(
@@ -235,7 +235,7 @@ class MatTests {
       additionalSources = listOf(serviceAnnotation),
       mainApplication = "com.project.service.MainKt",
       compilerPluginRegistrars = arrayOf(
-        FirMissingAnnotationsTherapistCompilerPluginRegistrar(
+        MissingAnnotationsTherapistCompilerPluginRegistrar(
           MissingAnnotationsTherapistArgs(
             annotations = listOf(
               Annotate(
@@ -277,7 +277,7 @@ class MatTests {
       additionalSources = listOf(dataModelAnnotation),
       mainApplication = "com.project.data.model.MainKt",
       compilerPluginRegistrars = arrayOf(
-        FirMissingAnnotationsTherapistCompilerPluginRegistrar(
+        MissingAnnotationsTherapistCompilerPluginRegistrar(
           MissingAnnotationsTherapistArgs(
             annotations = listOf(
               Annotate(
@@ -326,7 +326,7 @@ class MatTests {
       additionalSources = listOf(existingAnnotation, newAnnotation),
       mainApplication = "com.project.MainKt",
       compilerPluginRegistrars = arrayOf(
-        FirMissingAnnotationsTherapistCompilerPluginRegistrar(
+        MissingAnnotationsTherapistCompilerPluginRegistrar(
           MissingAnnotationsTherapistArgs(
             annotations = listOf(
               Annotate(
@@ -377,7 +377,7 @@ class MatTests {
       additionalSources = listOf(dynamicAnnotation),
       mainApplication = "com.project.MainKt",
       compilerPluginRegistrars = arrayOf(
-        FirMissingAnnotationsTherapistCompilerPluginRegistrar(
+        MissingAnnotationsTherapistCompilerPluginRegistrar(
           MissingAnnotationsTherapistArgs(
             annotations = listOf(
               Annotate(
@@ -424,7 +424,7 @@ class MatTests {
       additionalSources = listOf(nestedClassAnnotation),
       mainApplication = "com.project.MainKt",
       compilerPluginRegistrars = arrayOf(
-        FirMissingAnnotationsTherapistCompilerPluginRegistrar(
+        MissingAnnotationsTherapistCompilerPluginRegistrar(
           MissingAnnotationsTherapistArgs(
             annotations = listOf(
               Annotate(
@@ -480,7 +480,7 @@ class MatTests {
       additionalSources = listOf(inheritedAnnotation, baseClass, derivedClass),
       mainApplication = "com.project.MainKt",
       compilerPluginRegistrars = arrayOf(
-        FirMissingAnnotationsTherapistCompilerPluginRegistrar(
+        MissingAnnotationsTherapistCompilerPluginRegistrar(
           MissingAnnotationsTherapistArgs(
             annotations = listOf(
               Annotate(
@@ -535,7 +535,7 @@ class MatTests {
       additionalSources = listOf(openFunctionAnnotation),
       mainApplication = "com.project.MainKt",
       compilerPluginRegistrars = arrayOf(
-        FirMissingAnnotationsTherapistCompilerPluginRegistrar(
+        MissingAnnotationsTherapistCompilerPluginRegistrar(
           MissingAnnotationsTherapistArgs(
             annotations = listOf(
               Annotate(
@@ -584,7 +584,7 @@ class MatTests {
       additionalSources = listOf(localVarAnnotation),
       mainApplication = "com.project.MainKt",
       compilerPluginRegistrars = arrayOf(
-        FirMissingAnnotationsTherapistCompilerPluginRegistrar(
+        MissingAnnotationsTherapistCompilerPluginRegistrar(
           MissingAnnotationsTherapistArgs(
             annotations = listOf(
               Annotate(
@@ -633,7 +633,7 @@ class MatTests {
       additionalSources = listOf(uniqueAnnotation),
       mainApplication = "com.project.MainKt",
       compilerPluginRegistrars = arrayOf(
-        FirMissingAnnotationsTherapistCompilerPluginRegistrar(
+        MissingAnnotationsTherapistCompilerPluginRegistrar(
           MissingAnnotationsTherapistArgs(
             annotations = listOf(
               Annotate(
@@ -675,7 +675,7 @@ class MatTests {
       additionalSources = listOf(moduleAAnnotation),
       mainApplication = "com.project.moduleA.MainKt",
       compilerPluginRegistrars = arrayOf(
-        FirMissingAnnotationsTherapistCompilerPluginRegistrar(
+        MissingAnnotationsTherapistCompilerPluginRegistrar(
           MissingAnnotationsTherapistArgs(
             annotations = listOf(
               Annotate(
