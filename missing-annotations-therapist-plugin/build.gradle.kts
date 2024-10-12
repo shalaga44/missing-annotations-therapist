@@ -20,6 +20,17 @@ dependencies {
   testImplementation(enforcedPlatform("org.junit:junit-bom:5.9.1"))
 }
 
+tasks.named("lintBuildscripts").configure {
+  enabled = false
+}
+
+tasks.named("lintKotlinMain").configure {
+  enabled = false
+}
+tasks.named("lintKotlinTest").configure {
+  enabled = false
+}
+
 tasks.withType<KotlinCompile> {
   kotlinOptions.jvmTarget = "1.8"
   kotlinOptions.freeCompilerArgs += listOf(

@@ -26,7 +26,7 @@ import kotlin.annotation.AnnotationTarget
  */
 data class Annotation(
   val fqName: String,
-  val parameters: Map<String, String> = emptyMap()
+  val parameters: Map<String, String> = emptyMap(),
 ) {
   val shortName: String = fqName.substringAfterLast(".")
 }
@@ -41,7 +41,7 @@ data class Annotation(
 data class PackageTarget(
   val pattern: String,
   val matchType: MatchType = MatchType.EXACT,
-  val regex: String? = null
+  val regex: String? = null,
 ) {
   val shortName: String = pattern.substringAfterLast(".")
 }
@@ -66,7 +66,7 @@ data class Condition(
   val namePattern: String? = null,
   val inheritance: InheritanceCondition? = null,
   val typeCondition: TypeCondition? = null,
-  val customPredicate: String? = null
+  val customPredicate: String? = null,
 )
 
 /**
@@ -77,7 +77,7 @@ data class Condition(
  */
 data class InheritanceCondition(
   val superclass: String? = null,
-  val interfaces: List<String> = emptyList()
+  val interfaces: List<String> = emptyList(),
 )
 
 /**
@@ -86,7 +86,7 @@ data class InheritanceCondition(
  * @property typeNames List of type names that the property must match.
  */
 data class TypeCondition(
-  val typeNames: List<String> = emptyList()
+  val typeNames: List<String> = emptyList(),
 )
 
 /**
@@ -97,7 +97,7 @@ data class TypeCondition(
  */
 data class ModuleTarget(
   val moduleName: String,
-  val inclusion: Boolean = true
+  val inclusion: Boolean = true,
 )
 
 /**
@@ -106,7 +106,7 @@ data class ModuleTarget(
 enum class MatchType {
   EXACT,
   WILDCARD,
-  REGEX
+  REGEX,
 }
 
 /**
@@ -116,7 +116,7 @@ enum class Visibility {
   PUBLIC,
   PRIVATE,
   PROTECTED,
-  INTERNAL
+  INTERNAL,
 }
 
 /**
@@ -145,7 +145,7 @@ data class Annotate(
   var packageTarget: List<PackageTarget>,
   var moduleTarget: List<ModuleTarget> = listOf(),
   var sourceSets: List<String> = listOf(),
-  var conditions: List<Condition> = listOf()
+  var conditions: List<Condition> = listOf(),
 )
 
 /**

@@ -1,15 +1,15 @@
-import io.github.shalaga44.Annotate
-import io.github.shalaga44.Annotation
-import io.github.shalaga44.MissingAnnotationsTherapistGradleExtension
-import io.github.shalaga44.PackageTarget
+import dev.shalaga44.mat.*
 
 plugins {
-  kotlin("multiplatform") version "1.8.20"
-  id("io.github.shalaga44.missing-annotations-therapist") version "0.1.0-SNAPSHOT"
+  kotlin("multiplatform") version "2.0.21"
+  id("io.github.shalaga44.missing-annotations-therapist") version "0.0.1"
 }
 
 repositories {
   mavenLocal()
+  /*maven {
+    url = uri("https://maven.pkg.github.com/shalaga44/missing-annotations-therapist")
+  }*/
   maven {
     url = uri("~/.m2/repository")
   }
