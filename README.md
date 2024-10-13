@@ -56,7 +56,7 @@ The Gradle plugin is available through the [Gradle Plugin Portal][missing-annota
 
 ```kotlin
 plugins {
-    id("com.shalaga44.annotations.missing-annotations-therapist") version "0.1.0"
+    id("io.github.shalaga44.missing-annotations-therapist") version "0.1.0"
     kotlin("multiplatform") version "2.0.21"
 }
 ```
