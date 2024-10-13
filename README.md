@@ -27,7 +27,7 @@ With the `missing-annotations-therapist` plugin configured as follows:
 
 ```kotlin
 
-configure<MissingAnnotationsTherapistGradleExtension> {
+configure<MissingAnnotationsTherapist> {
     annotations = listOf(
         Annotate(
             annotationsToAdd = listOf(Annotation(fqName = "kotlin.js.JsExport")),
