@@ -24,7 +24,6 @@ package dev.shalaga44.mat.utils
  */
 data class Annotation(
   val fqName: String,
-  val parameters: Map<String, String>? = emptyMap(),
 ) {
   val shortName: String = fqName.substringAfterLast(".")
 }

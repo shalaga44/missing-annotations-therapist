@@ -368,7 +368,7 @@ class MatTests {
                 annotationsToAdd = listOf(
                   Annotation(
                     fqName = "com.project.DynamicAnnotation",
-                    parameters = mapOf("exportName" to "{className}"),
+                    /*parameters = mapOf("exportName" to "{className}"),*/
                   ),
                 ),
                 classTargets = listOf(ClassTypeTarget.REGULAR_CLASS),
