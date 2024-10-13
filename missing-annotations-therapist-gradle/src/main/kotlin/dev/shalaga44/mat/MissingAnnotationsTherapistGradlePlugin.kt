@@ -4,6 +4,7 @@ package dev.shalaga44.mat
 
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import dev.shalaga44.mat.utils.MissingAnnotationsTherapist
 import org.gradle.api.Project
 import org.gradle.api.provider.Provider
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
@@ -18,16 +19,16 @@ class MissingAnnotationsTherapistGradlePlugin : KotlinCompilerPluginSupportPlugi
     const val COMPILER_PLUGIN_ID = "io.github.shalaga44.missing-annotations-therapist"
     const val PLUGIN_GROUP_ID = "io.github.shalaga44"
     const val PLUGIN_ARTIFACT_ID = "missing-annotations-therapist-plugin"
-    const val PLUGIN_VERSION = "0.0.2"
+    const val PLUGIN_VERSION = "0.1.0"
   }
 
   override fun apply(target: Project): Unit = with(target) {
-    extensions.create("kotlinMissingAnnotationsTherapist", MissingAnnotationsTherapistGradleExtension::class.java)
+    extensions.create("kotlinMissingAnnotationsTherapist", MissingAnnotationsTherapist::class.java)
   }
 
   override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean {
     val project = kotlinCompilation.target.project
-    val extension = project.extensions.findByName("kotlinMissingAnnotationsTherapist") as? MissingAnnotationsTherapistGradleExtension ?: return false
+    val extension = project.extensions.findByName("kotlinMissingAnnotationsTherapist") as? MissingAnnotationsTherapist ?: return false
     val currentSourceSet = kotlinCompilation.defaultSourceSet.name
     return extension.annotations.any { it.sourceSets.contains(currentSourceSet) }
   }
@@ -43,7 +44,7 @@ class MissingAnnotationsTherapistGradlePlugin : KotlinCompilerPluginSupportPlugi
   override fun applyToCompilation(kotlinCompilation: KotlinCompilation<*>): Provider<List<SubpluginOption>> {
     val project = kotlinCompilation.target.project
     val extension =
-      project.extensions.findByName("kotlinMissingAnnotationsTherapist") as? MissingAnnotationsTherapistGradleExtension
+      project.extensions.findByName("kotlinMissingAnnotationsTherapist") as? MissingAnnotationsTherapist
         ?: return project.provider { emptyList() }
 
     val gson = GsonBuilder()

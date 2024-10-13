@@ -1,20 +1,11 @@
 package dev.shalaga44.mat
 
 import com.tschuchort.compiletesting.SourceFile
-import dev.shalaga44.mat.utils.Annotate
-import dev.shalaga44.mat.utils.Annotation
-import dev.shalaga44.mat.utils.Condition
-import dev.shalaga44.mat.utils.InheritanceCondition
-import dev.shalaga44.mat.utils.MatchType
-import dev.shalaga44.mat.utils.Modifier
-import dev.shalaga44.mat.utils.PackageTarget
-import dev.shalaga44.mat.utils.TypeCondition
-import dev.shalaga44.mat.utils.Visibility
+import dev.shalaga44.mat.utils.*
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
 class MatTests {
-
 
   private fun annotationFile(
     fileName: String,
@@ -30,10 +21,10 @@ class MatTests {
     return SourceFile.kotlin(
       fileName,
       """
-            package $packageName
+                package $packageName
 
-            annotation class $annotationName$params
-        """.trimIndent(),
+                annotation class $annotationName$params
+            """.trimIndent(),
     )
   }
 
@@ -42,17 +33,17 @@ class MatTests {
     val myDto = annotationFile("MyDto.kt", "com.project", "MyDto")
 
     val mainSource = """
-            package com.project
-            import kotlin.test.assertTrue
+                package com.project
+                import kotlin.test.assertTrue
 
-            class Hello
+                class Hello
 
-            fun main() { 
-                val hello = Hello()
-                val annotations = hello::class.annotations
-                assertTrue(annotations.any { it.annotationClass.simpleName == "MyDto" })
-            }
-        """.trimIndent()
+                fun main() { 
+                    val hello = Hello()
+                    val annotations = hello::class.annotations
+                    assertTrue(annotations.any { it.annotationClass.simpleName == "MyDto" })
+                }
+            """.trimIndent()
 
     run(
       mainSource = mainSource,
@@ -64,8 +55,8 @@ class MatTests {
             annotations = listOf(
               Annotate(
                 annotationsToAdd = listOf(Annotation(fqName = "com.project.MyDto")),
+                classTargets = listOf(ClassTypeTarget.REGULAR_CLASS),
                 packageTarget = listOf(PackageTarget(pattern = "com.project")),
-                annotationsTarget = listOf(AnnotationTarget.CLASS),
               ),
             ),
           ),
@@ -80,17 +71,17 @@ class MatTests {
     val serializable = annotationFile("Serializable.kt", "kotlinx.serialization", "Serializable")
 
     val mainSource = """
-            package com.project
-            import kotlin.test.assertTrue
+                package com.project
+                import kotlin.test.assertTrue
 
-            class Hello
+                class Hello
 
-            fun main() { 
-                val hello = Hello()
-                val annotations = hello::class.annotations.map { it.annotationClass.simpleName }
-                assertTrue(annotations.containsAll(listOf("MyDto", "Serializable")))
-            }
-        """.trimIndent()
+                fun main() { 
+                    val hello = Hello()
+                    val annotations = hello::class.annotations.map { it.annotationClass.simpleName }
+                    assertTrue(annotations.containsAll(listOf("MyDto", "Serializable")))
+                }
+            """.trimIndent()
 
     run(
       mainSource = mainSource,
@@ -105,8 +96,8 @@ class MatTests {
                   Annotation(fqName = "com.project.MyDto"),
                   Annotation(fqName = "kotlinx.serialization.Serializable"),
                 ),
+                classTargets = listOf(ClassTypeTarget.REGULAR_CLASS),
                 packageTarget = listOf(PackageTarget(pattern = "com.project")),
-                annotationsTarget = listOf(AnnotationTarget.CLASS),
               ),
             ),
           ),
@@ -120,18 +111,18 @@ class MatTests {
     val myFunctionAnnotation = annotationFile("MyFunctionAnnotation.kt", "com.project", "MyFunctionAnnotation")
 
     val mainSource = """
-            package com.project
-            import kotlin.test.assertTrue
+                package com.project
+                import kotlin.test.assertTrue
 
-            class Hello {
-                fun greet() {}
-            }
+                class Hello {
+                    fun greet() {}
+                }
 
-            fun main() { 
-                val greetAnnotations = Hello::greet.annotations.map { it.annotationClass.simpleName }
-                assertTrue(greetAnnotations.contains("MyFunctionAnnotation"))
-            }
-        """.trimIndent()
+                fun main() { 
+                    val greetAnnotations = Hello::greet.annotations.map { it.annotationClass.simpleName }
+                    assertTrue(greetAnnotations.contains("MyFunctionAnnotation"))
+                }
+            """.trimIndent()
 
     run(
       mainSource = mainSource,
@@ -145,9 +136,7 @@ class MatTests {
                 annotationsToAdd = listOf(
                   Annotation(fqName = "com.project.MyFunctionAnnotation"),
                 ),
-                annotationsTarget = listOf(
-                  AnnotationTarget.FUNCTION,
-                ),
+                functionTargets = listOf(FunctionTypeTarget.FUNCTION),
                 packageTarget = listOf(
                   PackageTarget(pattern = "com.project"),
                 ),
@@ -164,20 +153,20 @@ class MatTests {
     val propertyValidation = annotationFile("PropertyValidation.kt", "com.project", "PropertyValidation")
 
     val mainSource = """
-            package com.project
-            import kotlin.test.assertTrue
-            import kotlin.reflect.full.memberProperties
+                package com.project
+                import kotlin.test.assertTrue
+                import kotlin.reflect.full.memberProperties
 
-            class User {
-                private val isActive: Boolean = true
-            }
+                class User {
+                    private val isActive: Boolean = true
+                }
 
-            fun main() { 
-                val user = User()
-                val annotations = user::class.memberProperties.find { it.name == "isActive" }?.annotations
-                assertTrue(annotations?.any { it.annotationClass.simpleName == "PropertyValidation" } == true)
-            }
-        """.trimIndent()
+                fun main() { 
+                    val user = User()
+                    val annotations = user::class.memberProperties.find { it.name == "isActive" }?.annotations
+                    assertTrue(annotations?.any { it.annotationClass.simpleName == "PropertyValidation" } == true)
+                }
+            """.trimIndent()
 
     run(
       mainSource = mainSource,
@@ -191,9 +180,7 @@ class MatTests {
                 annotationsToAdd = listOf(
                   Annotation(fqName = "com.project.PropertyValidation"),
                 ),
-                annotationsTarget = listOf(
-                  AnnotationTarget.PROPERTY,
-                ),
+                propertyTargets = listOf(PropertyTypeTarget.PROPERTY),
                 packageTarget = listOf(
                   PackageTarget(pattern = "com.project"),
                 ),
@@ -219,16 +206,16 @@ class MatTests {
     val serviceAnnotation = annotationFile("ServiceAnnotation.kt", "com.project", "ServiceAnnotation")
 
     val mainSource = """
-            package com.project.service
-            import kotlin.test.assertTrue
+                package com.project.service
+                import kotlin.test.assertTrue
 
-            class ServiceClass
+                class ServiceClass
 
-            fun main() { 
-                val annotations = ServiceClass::class.annotations.map { it.annotationClass.simpleName }
-                assertTrue(annotations.contains("ServiceAnnotation"))
-            }
-        """.trimIndent()
+                fun main() { 
+                    val annotations = ServiceClass::class.annotations.map { it.annotationClass.simpleName }
+                    assertTrue(annotations.contains("ServiceAnnotation"))
+                }
+            """.trimIndent()
 
     run(
       mainSource = mainSource,
@@ -242,11 +229,12 @@ class MatTests {
                 annotationsToAdd = listOf(
                   Annotation(fqName = "com.project.ServiceAnnotation"),
                 ),
-                annotationsTarget = listOf(
-                  AnnotationTarget.CLASS,
-                ),
+                classTargets = listOf(ClassTypeTarget.REGULAR_CLASS),
                 packageTarget = listOf(
-                  PackageTarget(pattern = "com.project.*", matchType = MatchType.WILDCARD),
+                  PackageTarget(
+                    pattern = "com.project.*",
+                    matchType = MatchType.WILDCARD
+                  ),
                 ),
               ),
             ),
@@ -261,16 +249,16 @@ class MatTests {
     val dataModelAnnotation = annotationFile("DataModelAnnotation.kt", "com.project", "DataModelAnnotation")
 
     val mainSource = """
-            package com.project.data.model
-            import kotlin.test.assertTrue
+                package com.project.data.model
+                import kotlin.test.assertTrue
 
-            class DataModel
+                class DataModel
 
-            fun main() { 
-                val annotations = DataModel::class.annotations.map { it.annotationClass.simpleName }
-                assertTrue(annotations.contains("DataModelAnnotation"))
-            }
-        """.trimIndent()
+                fun main() { 
+                    val annotations = DataModel::class.annotations.map { it.annotationClass.simpleName }
+                    assertTrue(annotations.contains("DataModelAnnotation"))
+                }
+            """.trimIndent()
 
     run(
       mainSource = mainSource,
@@ -284,9 +272,7 @@ class MatTests {
                 annotationsToAdd = listOf(
                   Annotation(fqName = "com.project.DataModelAnnotation"),
                 ),
-                annotationsTarget = listOf(
-                  AnnotationTarget.CLASS,
-                ),
+                classTargets = listOf(ClassTypeTarget.REGULAR_CLASS),
                 packageTarget = listOf(
                   PackageTarget(
                     pattern = "com.project.data.model",
@@ -308,18 +294,18 @@ class MatTests {
     val newAnnotation = annotationFile("NewAnnotation.kt", "com.project", "NewAnnotation")
 
     val mainSource = """
-            package com.project
-            import kotlin.test.assertTrue
+                package com.project
+                import kotlin.test.assertTrue
 
-            @ExistingAnnotation
-            class ExistingAnnotatedClass
+                @ExistingAnnotation
+                class ExistingAnnotatedClass
 
-            fun main() { 
-                val annotations = ExistingAnnotatedClass::class.annotations.map { it.annotationClass.simpleName }
-                assertTrue(annotations.contains("ExistingAnnotation"))
-                assertTrue(annotations.contains("NewAnnotation"))
-            }
-        """.trimIndent()
+                fun main() { 
+                    val annotations = ExistingAnnotatedClass::class.annotations.map { it.annotationClass.simpleName }
+                    assertTrue(annotations.contains("ExistingAnnotation"))
+                    assertTrue(annotations.contains("NewAnnotation"))
+                }
+            """.trimIndent()
 
     run(
       mainSource = mainSource,
@@ -333,9 +319,7 @@ class MatTests {
                 annotationsToAdd = listOf(
                   Annotation(fqName = "com.project.NewAnnotation"),
                 ),
-                annotationsTarget = listOf(
-                  AnnotationTarget.CLASS,
-                ),
+                classTargets = listOf(ClassTypeTarget.REGULAR_CLASS),
                 packageTarget = listOf(
                   PackageTarget(pattern = "com.project"),
                 ),
@@ -359,18 +343,18 @@ class MatTests {
       annotationFile("DynamicAnnotation.kt", "com.project", "DynamicAnnotation", "val exportName: String")
 
     val mainSource = """
-            package com.project
-            import kotlin.test.assertTrue
+                package com.project
+                import kotlin.test.assertTrue
 
-            class DynamicClass
+                class DynamicClass
 
-            fun main() { 
-                val annotations = DynamicClass::class.annotations.find { it.annotationClass.simpleName == "DynamicAnnotation" }
-                assertTrue(annotations != null)
-                val exportName = annotations?.annotationClass?.qualifiedName
-                assertTrue(exportName?.contains("DynamicClass") == true)
-            }
-        """.trimIndent()
+                fun main() { 
+                    val annotations = DynamicClass::class.annotations.find { it.annotationClass.simpleName == "DynamicAnnotation" }
+                    assertTrue(annotations != null)
+                    val exportName = annotations?.annotationClass?.qualifiedName
+                    assertTrue(exportName?.contains("DynamicClass") == true)
+                }
+            """.trimIndent()
 
     run(
       mainSource = mainSource,
@@ -387,9 +371,7 @@ class MatTests {
                     parameters = mapOf("exportName" to "{className}"),
                   ),
                 ),
-                annotationsTarget = listOf(
-                  AnnotationTarget.CLASS,
-                ),
+                classTargets = listOf(ClassTypeTarget.REGULAR_CLASS),
                 packageTarget = listOf(
                   PackageTarget(pattern = "com.project"),
                 ),
@@ -406,18 +388,18 @@ class MatTests {
     val nestedClassAnnotation = annotationFile("NestedClassAnnotation.kt", "com.project", "NestedClassAnnotation")
 
     val mainSource = """
-            package com.project
-            import kotlin.test.assertTrue
+                package com.project
+                import kotlin.test.assertTrue
 
-            class Outer {
-                class Inner
-            }
+                class Outer {
+                    class Inner
+                }
 
-            fun main() { 
-                val annotations = Outer.Inner::class.annotations.map { it.annotationClass.simpleName }
-                assertTrue(annotations.contains("NestedClassAnnotation"))
-            }
-        """.trimIndent()
+                fun main() { 
+                    val annotations = Outer.Inner::class.annotations.map { it.annotationClass.simpleName }
+                    assertTrue(annotations.contains("NestedClassAnnotation"))
+                }
+            """.trimIndent()
 
     run(
       mainSource = mainSource,
@@ -428,10 +410,10 @@ class MatTests {
           MissingAnnotationsTherapistArgs(
             annotations = listOf(
               Annotate(
-                  annotationsToAdd = listOf(Annotation(fqName = "com.project.NestedClassAnnotation")),
-                  annotationsTarget = listOf(AnnotationTarget.CLASS),
-                  packageTarget = listOf(PackageTarget(pattern = "com.project")),
-                  annotateNestedClasses = true,
+                annotationsToAdd = listOf(Annotation(fqName = "com.project.NestedClassAnnotation")),
+                classTargets = listOf(ClassTypeTarget.REGULAR_CLASS),
+                packageTarget = listOf(PackageTarget(pattern = "com.project")),
+                annotateNestedClasses = true,
               ),
             ),
           ),
@@ -446,29 +428,29 @@ class MatTests {
     val baseClass = SourceFile.kotlin(
       "BaseClass.kt",
       """
-            package com.project
+                package com.project
 
-            open class BaseClass
-        """.trimIndent(),
+                open class BaseClass
+            """.trimIndent(),
     )
     val derivedClass = SourceFile.kotlin(
       "DerivedClass.kt",
       """
-            package com.project
+                package com.project
 
-            class DerivedClass : BaseClass()
-        """.trimIndent(),
+                class DerivedClass : BaseClass()
+            """.trimIndent(),
     )
 
     val mainSource = """
-            package com.project
-            import kotlin.test.assertTrue
+                package com.project
+                import kotlin.test.assertTrue
 
-            fun main() { 
-                val annotations = DerivedClass::class.annotations.map { it.annotationClass.simpleName }
-                assertTrue(annotations.contains("InheritedAnnotation"))
-            }
-        """.trimIndent()
+                fun main() { 
+                    val annotations = DerivedClass::class.annotations.map { it.annotationClass.simpleName }
+                    assertTrue(annotations.contains("InheritedAnnotation"))
+                }
+            """.trimIndent()
 
     run(
       mainSource = mainSource,
@@ -482,9 +464,7 @@ class MatTests {
                 annotationsToAdd = listOf(
                   Annotation(fqName = "com.project.InheritedAnnotation"),
                 ),
-                annotationsTarget = listOf(
-                  AnnotationTarget.CLASS,
-                ),
+                classTargets = listOf(ClassTypeTarget.REGULAR_CLASS),
                 packageTarget = listOf(
                   PackageTarget(pattern = "com.project"),
                 ),
@@ -508,22 +488,22 @@ class MatTests {
     val openFunctionAnnotation = annotationFile("OpenFunctionAnnotation.kt", "com.project", "OpenFunctionAnnotation")
 
     val mainSource = """
-            package com.project
-            import kotlin.test.assertTrue
+                package com.project
+                import kotlin.test.assertTrue
 
-            class Service {
-                open fun perform() {}
-                fun execute() {}
-            }
+                class Service {
+                    open fun perform() {}
+                    fun execute() {}
+                }
 
-            fun main() { 
-                val service = Service()
-                val openAnnotations = service::perform.annotations.map { it.annotationClass.simpleName }
-                val executeAnnotations = service::execute.annotations.map { it.annotationClass.simpleName }
-                assertTrue(openAnnotations.contains("OpenFunctionAnnotation"))
-                assertTrue(!executeAnnotations.contains("OpenFunctionAnnotation"))
-            }
-        """.trimIndent()
+                fun main() { 
+                    val service = Service()
+                    val openAnnotations = service::perform.annotations.map { it.annotationClass.simpleName }
+                    val executeAnnotations = service::execute.annotations.map { it.annotationClass.simpleName }
+                    assertTrue(openAnnotations.contains("OpenFunctionAnnotation"))
+                    assertTrue(!executeAnnotations.contains("OpenFunctionAnnotation"))
+                }
+            """.trimIndent()
 
     run(
       mainSource = mainSource,
@@ -537,9 +517,7 @@ class MatTests {
                 annotationsToAdd = listOf(
                   Annotation(fqName = "com.project.OpenFunctionAnnotation"),
                 ),
-                annotationsTarget = listOf(
-                  AnnotationTarget.FUNCTION,
-                ),
+                functionTargets = listOf(FunctionTypeTarget.FUNCTION),
                 packageTarget = listOf(
                   PackageTarget(pattern = "com.project"),
                 ),
@@ -561,18 +539,19 @@ class MatTests {
     val localVarAnnotation = annotationFile("LocalVarAnnotation.kt", "com.project", "LocalVarAnnotation")
 
     val mainSource = """
-            package com.project
-            import kotlin.test.assertTrue
+                package com.project
+                import kotlin.test.assertTrue
 
-            fun main() { 
-                val tempValue = 42
-                // Simulating local variable annotation retrieval
-                // Since Kotlin does not support runtime reflection on local variables, we use an approach to attach annotations manually.
-                // This is for illustrative purposes and may not work as expected in a real-world scenario.
-                val annotations = listOf(LocalVarAnnotation())
-                assertTrue(annotations.any { it.annotationClass.simpleName == "LocalVarAnnotation" })
-            }
-        """.trimIndent()
+                fun main() { 
+                    @LocalVarAnnotation
+                    val tempValue = 42
+                    // Simulating local variable annotation retrieval
+                    // Since Kotlin does not support runtime reflection on local variables, we use an approach to attach annotations manually.
+                    // This is for illustrative purposes and may not work as expected in a real-world scenario.
+                    val annotations = listOf(LocalVarAnnotation())
+                    assertTrue(annotations.any { it.annotationClass.simpleName == "LocalVarAnnotation" })
+                }
+            """.trimIndent()
 
     run(
       mainSource = mainSource,
@@ -586,9 +565,7 @@ class MatTests {
                 annotationsToAdd = listOf(
                   Annotation(fqName = "com.project.LocalVarAnnotation"),
                 ),
-                annotationsTarget = listOf(
-                  AnnotationTarget.LOCAL_VARIABLE,
-                ),
+                propertyTargets = listOf(PropertyTypeTarget.LOCAL_VARIABLE),
                 packageTarget = listOf(
                   PackageTarget(pattern = "com.project"),
                 ),
@@ -635,9 +612,7 @@ class MatTests {
                 annotationsToAdd = listOf(
                   Annotation(fqName = "com.project.UniqueAnnotation"),
                 ),
-                annotationsTarget = listOf(
-                  AnnotationTarget.CLASS,
-                ),
+                classTargets = listOf(ClassTypeTarget.REGULAR_CLASS),
                 packageTarget = listOf(
                   PackageTarget(pattern = "com.project"),
                 ),
@@ -651,7 +626,7 @@ class MatTests {
 
   @Test
   fun `add annotation to class in specific module`() {
-    val moduleAAnnotation = annotationFile("ModuleAAnnotation.kt", "com.project", "ModuleAAnnotation")
+    val moduleAAnnotation = annotationFile("ModuleAAnnotation.kt", "com.project.moduleA", "ModuleAAnnotation")
 
     val mainSource = """
             package com.project.moduleA
@@ -675,14 +650,13 @@ class MatTests {
             annotations = listOf(
               Annotate(
                 annotationsToAdd = listOf(
-                  Annotation(fqName = "com.project.ModuleAAnnotation"),
+                  Annotation(fqName = "com.project.moduleA.ModuleAAnnotation"),
                 ),
-                annotationsTarget = listOf(
-                  AnnotationTarget.CLASS,
-                ),
+                classTargets = listOf(ClassTypeTarget.REGULAR_CLASS),
                 packageTarget = listOf(
                   PackageTarget(pattern = "com.project.moduleA"),
                 ),
+                // Implement moduleTarget handling if required
               ),
             ),
           ),
@@ -696,22 +670,22 @@ class MatTests {
     val annotation = annotationFile("TestAnnotation.kt", "com.project", "TestAnnotation")
 
     val mainSource = """
-        package com.project
-        import kotlin.test.assertTrue
+            package com.project
+            import kotlin.test.assertTrue
 
-        class Outer {
-            class Inner
-            val field: Inner = Inner()
-        }
+            class Outer {
+                class Inner
+                val field: Inner = Inner()
+            }
 
-        fun main() { 
-            val innerAnnotations = Outer.Inner::class.annotations.map { it.annotationClass.simpleName }
-            val fieldAnnotations = Outer().field::class.annotations.map { it.annotationClass.simpleName }
+            fun main() { 
+                val innerAnnotations = Outer.Inner::class.annotations.map { it.annotationClass.simpleName }
+                val fieldAnnotations = Outer().field::class.annotations.map { it.annotationClass.simpleName }
 
-            assertTrue(innerAnnotations.contains("TestAnnotation"))
-            assertTrue(fieldAnnotations.contains("TestAnnotation"))
-        }
-    """.trimIndent()
+                assertTrue(innerAnnotations.contains("TestAnnotation"))
+                assertTrue(fieldAnnotations.contains("TestAnnotation"))
+            }
+        """.trimIndent()
 
     run(
       mainSource = mainSource,
@@ -725,7 +699,7 @@ class MatTests {
                 annotationsToAdd = listOf(
                   Annotation(fqName = "com.project.TestAnnotation"),
                 ),
-                annotationsTarget = listOf(AnnotationTarget.CLASS),
+                classTargets = listOf(ClassTypeTarget.REGULAR_CLASS),
                 packageTarget = listOf(PackageTarget(pattern = "com.project")),
                 annotateNestedClasses = true,
                 annotateFieldClasses = true,
@@ -742,22 +716,22 @@ class MatTests {
     val annotation = annotationFile("TestAnnotation.kt", "com.project", "TestAnnotation")
 
     val mainSource = """
-        package com.project
-        import kotlin.test.assertTrue
+            package com.project
+            import kotlin.test.assertTrue
 
-        class Outer {
-            class Inner
-            val field: Inner = Inner()
-        }
+            class Outer {
+                class Inner
+                val field: Inner = Inner()
+            }
 
-        fun main() { 
-            val innerAnnotations = Outer.Inner::class.annotations.map { it.annotationClass.simpleName }
-            val fieldAnnotations = Outer().field::class.annotations.map { it.annotationClass.simpleName }
-            
-            assertTrue(!innerAnnotations.contains("TestAnnotation"), "innerAnnotations must not be annotated") 
-            assertTrue(!fieldAnnotations.contains("TestAnnotation"), "fieldAnnotations must not be annotated")
-        }
-    """.trimIndent()
+            fun main() { 
+                val innerAnnotations = Outer.Inner::class.annotations.map { it.annotationClass.simpleName }
+                val fieldAnnotations = Outer().field::class.annotations.map { it.annotationClass.simpleName }
+                
+                assertTrue(!innerAnnotations.contains("TestAnnotation"), "innerAnnotations must not be annotated") 
+                assertTrue(!fieldAnnotations.contains("TestAnnotation"), "fieldAnnotations must not be annotated")
+            }
+        """.trimIndent()
 
     run(
       mainSource = mainSource,
@@ -771,7 +745,7 @@ class MatTests {
                 annotationsToAdd = listOf(
                   Annotation(fqName = "com.project.TestAnnotation"),
                 ),
-                annotationsTarget = listOf(AnnotationTarget.CLASS),
+                classTargets = listOf(ClassTypeTarget.REGULAR_CLASS),
                 packageTarget = listOf(PackageTarget(pattern = "com.project")),
                 annotateNestedClasses = false,
                 annotateFieldClasses = false,
@@ -788,38 +762,37 @@ class MatTests {
     val annotation = annotationFile("TestAnnotation.kt", "com.project", "TestAnnotation")
 
     val mainSource = """
-        package com.project
-        import kotlin.test.assertEquals
+            package com.project
+            import kotlin.test.assertEquals
 
-        class Outer {
-            class Inner
-        }
+            class Outer {
+                class Inner
+            }
 
-        fun main() { 
-            val annotations = Outer.Inner::class.annotations.filter { it.annotationClass.simpleName == "TestAnnotation" }
-            assertEquals(1, annotations.size)  
-        }
-    """.trimIndent()
+            fun main() { 
+                val annotations = Outer.Inner::class.annotations.filter { it.annotationClass.simpleName == "TestAnnotation" }
+                assertEquals(1, annotations.size)  
+            }
+        """.trimIndent()
 
     run(
-        mainSource = mainSource,
-        additionalSources = listOf(annotation),
-        mainApplication = "com.project.MainKt",
-        compilerPluginRegistrars = arrayOf(
-            MissingAnnotationsTherapistCompilerPluginRegistrar(
-                MissingAnnotationsTherapistArgs(
-                    annotations = listOf(
-                        Annotate(
-                            annotationsToAdd = listOf(Annotation(fqName = "com.project.TestAnnotation")),
-                            annotationsTarget = listOf(AnnotationTarget.CLASS),
-                            packageTarget = listOf(PackageTarget(pattern = "com.project")),
-                            annotateNestedClasses = true,
-                        ),
-                    ),
-                ),
+      mainSource = mainSource,
+      additionalSources = listOf(annotation),
+      mainApplication = "com.project.MainKt",
+      compilerPluginRegistrars = arrayOf(
+        MissingAnnotationsTherapistCompilerPluginRegistrar(
+          MissingAnnotationsTherapistArgs(
+            annotations = listOf(
+              Annotate(
+                annotationsToAdd = listOf(Annotation(fqName = "com.project.TestAnnotation")),
+                classTargets = listOf(ClassTypeTarget.REGULAR_CLASS),
+                packageTarget = listOf(PackageTarget(pattern = "com.project")),
+                annotateNestedClasses = true,
+              ),
             ),
+          ),
         ),
+      ),
     )
   }
 }
-

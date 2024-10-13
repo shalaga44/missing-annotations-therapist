@@ -1,7 +1,7 @@
 import dev.shalaga44.mat.*
 
 plugins {
-  id("io.github.shalaga44.missing-annotations-therapist") version "0.0.1"
+  id("io.github.shalaga44.missing-annotations-therapist") version "0.1.0"
   kotlin("multiplatform") version "2.0.21"
 }
 
@@ -83,7 +83,7 @@ configure<MissingAnnotationsTherapistGradleExtension> {
   annotations = listOf(
     Annotate(
       annotationsToAdd = listOf(Annotation("kotlin.js.JsExport")),
-      annotationsTarget = listOf(AnnotationTarget.CLASS),
+      classesclassTargets = listOf(ClassTypeTarget.REGULAR_CLASS),
       packageTarget = listOf(PackageTarget("com.project.common.dto.js")),
       sourceSets = listOf( "jsMain", "jsTest", ),
 

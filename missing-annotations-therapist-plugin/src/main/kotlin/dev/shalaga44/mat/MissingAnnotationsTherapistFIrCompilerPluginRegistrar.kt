@@ -1,15 +1,25 @@
+/*
+ * Copyright (C) 2020 Brian Norman
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package dev.shalaga44.mat
 
 import com.google.auto.service.AutoService
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import dev.shalaga44.mat.utils.Annotate
-import dev.shalaga44.mat.utils.Annotation
-import dev.shalaga44.mat.utils.Condition
-import dev.shalaga44.mat.utils.MatchType
-import dev.shalaga44.mat.utils.Modifier
-import dev.shalaga44.mat.utils.PackageTarget
-import dev.shalaga44.mat.utils.Visibility
+import dev.shalaga44.mat.utils.*
 import org.jetbrains.kotlin.KtSourceElement
 import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
 import org.jetbrains.kotlin.config.CompilerConfiguration
@@ -18,28 +28,11 @@ import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
 import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.analysis.checkers.MppCheckerKind
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
-import org.jetbrains.kotlin.fir.analysis.checkers.declaration.DeclarationCheckers
-import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirPropertyChecker
-import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirRegularClassChecker
-import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirSimpleFunctionChecker
+import org.jetbrains.kotlin.fir.analysis.checkers.declaration.*
 import org.jetbrains.kotlin.fir.analysis.checkers.getContainingClassSymbol
 import org.jetbrains.kotlin.fir.analysis.checkers.hasModifier
 import org.jetbrains.kotlin.fir.analysis.extensions.FirAdditionalCheckersExtension
-import org.jetbrains.kotlin.fir.declarations.FirAnonymousInitializer
-import org.jetbrains.kotlin.fir.declarations.FirCallableDeclaration
-import org.jetbrains.kotlin.fir.declarations.FirClass
-import org.jetbrains.kotlin.fir.declarations.FirCodeFragment
-import org.jetbrains.kotlin.fir.declarations.FirDanglingModifierList
-import org.jetbrains.kotlin.fir.declarations.FirDeclaration
-import org.jetbrains.kotlin.fir.declarations.FirFile
-import org.jetbrains.kotlin.fir.declarations.FirProperty
-import org.jetbrains.kotlin.fir.declarations.FirRegularClass
-import org.jetbrains.kotlin.fir.declarations.FirScript
-import org.jetbrains.kotlin.fir.declarations.FirSimpleFunction
-import org.jetbrains.kotlin.fir.declarations.FirTypeAlias
-import org.jetbrains.kotlin.fir.declarations.FirTypeParameter
-import org.jetbrains.kotlin.fir.declarations.FirVariable
-import org.jetbrains.kotlin.fir.declarations.hasAnnotation
+import org.jetbrains.kotlin.fir.declarations.*
 import org.jetbrains.kotlin.fir.declarations.utils.classId
 import org.jetbrains.kotlin.fir.declarations.utils.superConeTypes
 import org.jetbrains.kotlin.fir.expressions.FirAnnotation
@@ -65,7 +58,6 @@ import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
-
 
 @AutoService(CompilerPluginRegistrar::class)
 class MissingAnnotationsTherapistCompilerPluginRegistrar(
@@ -140,7 +132,7 @@ internal class FirMissingAnnotationsTherapistExtensionSessionComponent(
   val enableLogging: Boolean = args.enableLogging
 
   fun shouldAnnotateClass(declaration: FirRegularClass): Boolean {
-    val should = shouldAnnotate(declaration.classId.packageFqName.asString())
+    val should = shouldAnnotate(declaration.classId.packageFqName.asString(), ClassTypeTarget.REGULAR_CLASS)
     if (enableLogging) {
       println("Checking if should annotate class ${declaration.name}: $should")
     }
@@ -149,7 +141,8 @@ internal class FirMissingAnnotationsTherapistExtensionSessionComponent(
 
   fun shouldAnnotateFunction(declaration: FirSimpleFunction): Boolean {
     val containingClass = declaration.getContainingClass(session)
-    val should = shouldAnnotate(containingClass?.classId?.packageFqName?.asString() ?: "")
+    val packageName = containingClass?.classId?.packageFqName?.asString() ?: ""
+    val should = shouldAnnotate(packageName, FunctionTypeTarget.FUNCTION)
     if (enableLogging) {
       println("Checking if should annotate function ${declaration.name}: $should")
     }
@@ -158,7 +151,8 @@ internal class FirMissingAnnotationsTherapistExtensionSessionComponent(
 
   fun shouldAnnotateProperty(declaration: FirProperty): Boolean {
     val containingClass = declaration.getContainingClass(session)
-    val should = shouldAnnotate(containingClass?.classId?.packageFqName?.asString() ?: "")
+    val packageName = containingClass?.classId?.packageFqName?.asString() ?: ""
+    val should = shouldAnnotate(packageName, PropertyTypeTarget.PROPERTY)
     if (enableLogging) {
       println("Checking if should annotate property ${declaration.name}: $should")
     }
@@ -167,25 +161,53 @@ internal class FirMissingAnnotationsTherapistExtensionSessionComponent(
 
   fun shouldAnnotateVariable(declaration: FirVariable): Boolean {
     val containingClass = declaration.getContainingClass(session)
-    val should = shouldAnnotate(containingClass?.classId?.packageFqName?.asString() ?: "")
+    val packageName = containingClass?.classId?.packageFqName?.asString() ?: ""
+    val should = shouldAnnotate(packageName, PropertyTypeTarget.LOCAL_VARIABLE)
     if (enableLogging) {
       println("Checking if should annotate variable ${declaration.name}: $should")
     }
     return should
   }
 
-  private fun shouldAnnotate(packageFqName: String): Boolean {
+  private fun shouldAnnotate(packageFqName: String, targetType: Enum<*>): Boolean {
     val result = args.annotations.any { annotate ->
+      // Check Module Target
+      if (annotate.moduleTarget.isNotEmpty()) {
+        // Implement module inclusion/exclusion logic if needed
+        // For now, skipping moduleTarget handling
+      }
+
+      // Check Package Target
       annotate.packageTarget.any { packageTarget ->
         when (packageTarget.matchType) {
           MatchType.EXACT -> packageFqName == packageTarget.pattern
           MatchType.WILDCARD -> packageFqName.startsWith(packageTarget.pattern.removeSuffix("*"))
           MatchType.REGEX -> packageFqName.matches(Regex(packageTarget.regex ?: return@any false))
         }
+      } && when (targetType) {
+        ClassTypeTarget.REGULAR_CLASS -> annotate.classTargets.contains(ClassTypeTarget.REGULAR_CLASS)
+        ClassTypeTarget.ENUM_CLASS -> annotate.classTargets.contains(ClassTypeTarget.ENUM_CLASS)
+        ClassTypeTarget.SEALED_CLASS -> annotate.classTargets.contains(ClassTypeTarget.SEALED_CLASS)
+        ClassTypeTarget.DATA_CLASS -> annotate.classTargets.contains(ClassTypeTarget.DATA_CLASS)
+        ClassTypeTarget.OBJECT_CLASS -> annotate.classTargets.contains(ClassTypeTarget.OBJECT_CLASS)
+        ClassTypeTarget.ANNOTATION_CLASS -> annotate.classTargets.contains(ClassTypeTarget.ANNOTATION_CLASS)
+        FunctionTypeTarget.FUNCTION -> annotate.functionTargets.contains(FunctionTypeTarget.FUNCTION)
+        FunctionTypeTarget.SUSPEND_FUNCTION -> annotate.functionTargets.contains(FunctionTypeTarget.SUSPEND_FUNCTION)
+        FunctionTypeTarget.LAMBDA -> annotate.functionTargets.contains(FunctionTypeTarget.LAMBDA)
+        FunctionTypeTarget.CONSTRUCTOR -> annotate.functionTargets.contains(FunctionTypeTarget.CONSTRUCTOR)
+        PropertyTypeTarget.PROPERTY -> annotate.propertyTargets.contains(PropertyTypeTarget.PROPERTY)
+        PropertyTypeTarget.FIELD -> annotate.propertyTargets.contains(PropertyTypeTarget.FIELD)
+        PropertyTypeTarget.LOCAL_VARIABLE -> annotate.propertyTargets.contains(PropertyTypeTarget.LOCAL_VARIABLE)
+        PropertyTypeTarget.VALUE_PARAMETER -> annotate.propertyTargets.contains(PropertyTypeTarget.VALUE_PARAMETER)
+        PropertyTypeTarget.GETTER -> annotate.propertyTargets.contains(PropertyTypeTarget.GETTER)
+        PropertyTypeTarget.SETTER -> annotate.propertyTargets.contains(PropertyTypeTarget.SETTER)
+        TypeAliasTarget.TYPE_ALIAS -> annotate.typeAliasTargets.contains(TypeAliasTarget.TYPE_ALIAS)
+        FileTarget.FILE -> annotate.fileTargets.contains(FileTarget.FILE)
+        else -> false
       }
     }
     if (enableLogging) {
-      println("shouldAnnotate for package '$packageFqName': $result")
+      println("shouldAnnotate for package '$packageFqName' and target '$targetType': $result")
     }
     return result
   }
@@ -234,7 +256,6 @@ internal class MissingAnnotationsTherapistExtensionFirCheckersExtension(
 
       override val propertyCheckers: Set<FirPropertyChecker> =
         setOf(MissingAnnotationsTherapistPropertyChecker(session))
-
     }
 
   class MissingAnnotationsTherapistClassChecker(
@@ -280,7 +301,6 @@ internal class MissingAnnotationsTherapistExtensionFirCheckersExtension(
           annotateClassRecursively(propertyClass, session, annotateConfig, isFieldReferenced = true)
         }
       }
-
     }
 
     @OptIn(SymbolInternals::class)
@@ -296,10 +316,10 @@ internal class MissingAnnotationsTherapistExtensionFirCheckersExtension(
       session: FirSession,
       annotateConfig: Annotate,
     ) {
-      val existingAnnotationFqNames = declaration.annotations.map { it.fqName(session)?.asString()?.toClassId() }
+      val existingAnnotationFqNames = declaration.annotations.mapNotNull { it.fqName(session)?.asString() }
 
       val newAnnotations = annotateConfig.annotationsToAdd.filter { annotation ->
-        val fqName = annotation.toFqName().asString().toClassId()
+        val fqName = annotation.fqName
         if (fqName in existingAnnotationFqNames) {
           if (session.myFirExtensionSessionComponent.enableLogging) {
             println("Skipping duplicate annotation: $fqName for ${declaration.nameAsString}")
@@ -327,7 +347,7 @@ internal class MissingAnnotationsTherapistExtensionFirCheckersExtension(
       }
 
       val annotateConfigs = component.args.annotations.filter { annotate ->
-        annotate.annotationsTarget.contains(AnnotationTarget.CLASS) &&
+        annotate.classTargets.isNotEmpty() &&
           annotate.packageTarget.any { packageTarget ->
             packageTarget.match(declaration.classId.packageFqName.asString())
           }
@@ -362,7 +382,7 @@ internal class MissingAnnotationsTherapistExtensionFirCheckersExtension(
 
       val annotateConfigs = context.session.myFirExtensionSessionComponent.args.annotations
         .filter { annotate ->
-          annotate.annotationsTarget.contains(AnnotationTarget.FUNCTION) &&
+          annotate.functionTargets.isNotEmpty() &&
             annotate.packageTarget.any { packageTarget ->
               when (packageTarget.matchType) {
                 MatchType.EXACT -> declaration.getContainingClass(session)?.classId?.packageFqName?.asString() == packageTarget.pattern
@@ -422,7 +442,7 @@ internal class MissingAnnotationsTherapistExtensionFirCheckersExtension(
 
       val annotateConfigs = context.session.myFirExtensionSessionComponent.args.annotations
         .filter { annotate ->
-          annotate.annotationsTarget.contains(AnnotationTarget.PROPERTY) &&
+          annotate.propertyTargets.isNotEmpty() &&
             annotate.packageTarget.any { packageTarget ->
               when (packageTarget.matchType) {
                 MatchType.EXACT -> declaration.getContainingClass(session)?.classId?.packageFqName?.asString() == packageTarget.pattern
@@ -458,9 +478,8 @@ internal class MissingAnnotationsTherapistExtensionFirCheckersExtension(
       }
     }
   }
-
-
 }
+
 
 fun PackageTarget.match(packageName: String): Boolean {
   return when (matchType) {
@@ -469,7 +488,6 @@ fun PackageTarget.match(packageName: String): Boolean {
     MatchType.REGEX -> regex?.let { Regex(it).matches(packageName) } ?: false
   }
 }
-
 
 @OptIn(SymbolInternals::class)
 private fun <T : FirDeclaration> evaluateConditions(
@@ -488,11 +506,9 @@ private fun <T : FirDeclaration> evaluateConditions(
       declarationHasAnnotation(declaration, existing, session)
     }
 
-
     val absenceCheck = condition.annotationsAbsence.none { absent ->
       declarationHasAnnotation(declaration, absent, session)
     }
-
 
     val namePatternCheck = condition.namePattern?.let { pattern ->
       val name = declaration.nameAsString
@@ -502,7 +518,6 @@ private fun <T : FirDeclaration> evaluateConditions(
       }
       matches
     } ?: true
-
 
     val visibilityCheck = condition.visibility?.let { visibility ->
       val actualVisibility = declaration.visibilityForApproximation(declaration)
@@ -518,7 +533,6 @@ private fun <T : FirDeclaration> evaluateConditions(
       matches
     } ?: true
 
-
     val modifiersCheck = condition.modifiers?.let { requiredModifiers ->
       val matches = requiredModifiers.all { modifier ->
         hasModifier(declaration, modifier)
@@ -529,23 +543,20 @@ private fun <T : FirDeclaration> evaluateConditions(
       matches
     } ?: true
 
-
     val inheritanceCheck = condition.inheritance?.let { inheritance ->
       val superclassFqName = inheritance.superclass?.toClassId()
       val actualSuperclasses = when (declaration) {
         is FirRegularClass ->
           declaration.superConeTypes.map { it }
-            .map { it.lookupTag.toSymbol(session)?.fir?.classId }
-
+            .mapNotNull { it.lookupTag.toSymbol(session)?.fir?.classId }
         else -> emptyList()
       }
-      val matches = actualSuperclasses.contains(superclassFqName)
+      val matches = superclassFqName?.let { actualSuperclasses.contains(it) } ?: true
       if (component.enableLogging) {
         println("InheritanceCheck for '${declaration.nameAsString}' with superclass '$superclassFqName': $matches")
       }
       matches
     } ?: true
-
 
     val typeConditionCheck = condition.typeCondition?.let { typeCondition ->
       val typeNames = typeCondition.typeNames
@@ -564,9 +575,7 @@ private fun <T : FirDeclaration> evaluateConditions(
       matches
     } ?: true
 
-
     val customPredicateCheck = true/*condition.customPredicate?.invoke(declaration) ?: true*/
-
 
     val allConditionsMet = existingCheck &&
       absenceCheck &&
@@ -593,7 +602,6 @@ fun Modifier.toKtModifierKeywordToken(): KtModifierKeywordToken = when (this) {
   Modifier.PRIVATE -> KtTokens.PRIVATE_KEYWORD
 }
 
-
 private fun hasModifier(declaration: FirDeclaration, modifier: Modifier): Boolean {
   return declaration.hasModifier(modifier.toKtModifierKeywordToken())
 }
@@ -603,36 +611,46 @@ private fun <T> declarationHasAnnotation(declaration: T, fqName: String, session
   return when (declaration) {
     is FirRegularClass -> {
       val has = declaration.hasAnnotation(fqName.toClassId(), session)
-      println("DeclarationHasAnnotation: Class ${declaration.name} has annotation $fqName: $has")
+      if (session.myFirExtensionSessionComponent.enableLogging) {
+        println("DeclarationHasAnnotation: Class ${declaration.name} has annotation $fqName: $has")
+      }
       has
     }
 
     is FirSimpleFunction -> {
       val has = declaration.hasAnnotation(fqName.toClassId(), session)
-      println("DeclarationHasAnnotation: Function ${declaration.name} has annotation $fqName: $has")
+      if (session.myFirExtensionSessionComponent.enableLogging) {
+        println("DeclarationHasAnnotation: Function ${declaration.name} has annotation $fqName: $has")
+      }
       has
     }
 
     is FirProperty -> {
       val has = declaration.hasAnnotation(fqName.toClassId(), session)
-      println("DeclarationHasAnnotation: Property ${declaration.name} has annotation $fqName: $has")
+      if (session.myFirExtensionSessionComponent.enableLogging) {
+        println("DeclarationHasAnnotation: Property ${declaration.name} has annotation $fqName: $has")
+      }
       has
     }
 
     is FirVariable -> {
       val has = declaration.hasAnnotation(fqName.toClassId(), session)
-      println("DeclarationHasAnnotation: Variable ${declaration.name} has annotation $fqName: $has")
+      if (session.myFirExtensionSessionComponent.enableLogging) {
+        println("DeclarationHasAnnotation: Variable ${declaration.name} has annotation $fqName: $has")
+      }
       has
     }
 
     else -> {
-      println("DeclarationHasAnnotation: Unknown declaration type for $declaration")
+      if (session.myFirExtensionSessionComponent.enableLogging) {
+        println("DeclarationHasAnnotation: Unknown declaration type for $declaration")
+      }
       false
     }
   }
 }
 
-private fun Annotation.toFirAnnotation(session: FirSession, declaration: FirDeclaration): List<FirAnnotation> {
+private fun dev.shalaga44.mat.utils.Annotation.toFirAnnotation(session: FirSession, declaration: FirDeclaration): List<FirAnnotation> {
   return listOf(
     createFirAnnotation(
       fqName = this.toFqName(),
@@ -644,10 +662,9 @@ private fun Annotation.toFirAnnotation(session: FirSession, declaration: FirDecl
   )
 }
 
-private fun Annotation.toFqName(): FqName {
+private fun dev.shalaga44.mat.utils.Annotation.toFqName(): FqName {
   return FqName(this.fqName)
 }
-
 
 fun createFirAnnotation(
   fqName: FqName,
@@ -665,10 +682,10 @@ fun createFirAnnotation(
     )
   }
 
-  val parametersFinal: Map<String, String> = emptyMap()/*parameters*/
-  argumentMapping = parametersFinal.ifEmpty { null }?.let {
+  val parametersFinal: Map<String, String> = parameters
+  argumentMapping = if (parametersFinal.isNotEmpty()) {
     buildAnnotationArgumentMapping {
-      it.forEach { (key, value) ->
+      parametersFinal.forEach { (key, value) ->
         val processedValue = value.replace("{className}", declarationName)
         val name = Name.identifier(key)
         mapping[name] = buildLiteralExpression(
@@ -679,12 +696,13 @@ fun createFirAnnotation(
         )
       }
     }
-  } ?: FirEmptyAnnotationArgumentMapping
+  } else {
+    FirEmptyAnnotationArgumentMapping
+  }
 
 }
 
 public inline fun String.toClassId(): ClassId = FqName(this).run { ClassId(parent(), shortName()) }
-
 
 private fun isNestedClass(declaration: FirRegularClass, session: FirSession): Boolean {
   val containingClass = declaration.symbol.getContainingClassSymbol(session)

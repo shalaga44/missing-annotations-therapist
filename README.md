@@ -32,7 +32,7 @@ configure<MissingAnnotationsTherapistGradleExtension> {
         Annotate(
             annotationsToAdd = listOf(Annotation(fqName = "kotlin.js.JsExport")),
             packageTarget = listOf(PackageTarget(pattern = "com.project.common.dto")),
-            annotationsTarget = listOf(AnnotationTarget.CLASS),
+            classTargets = listOf(ClassTypeTarget.REGULAR_CLASS),
             sourceSets = listOf("commonMain", "jsMain"),
         ),
     )
@@ -76,14 +76,14 @@ Configure the plugin in your `build.gradle.kts` file:
 ```kotlin
 import dev.shalaga44.mat.*
 
-configure<MissingAnnotationsTherapistGradleExtension> {
+configure<MissingAnnotationsTherapist> {
     annotations = listOf(
         Annotate(
-            annotationsToAdd = listOf(Annotation("kotlin.js.JsExport")),
-            annotationsTarget = listOf(AnnotationTarget.CLASS),
-            packageTarget = listOf(PackageTarget("com.project.common.dto")),
+            annotationsToAdd = listOf(Annotation(fqName = "kotlin.js.JsExport")),
+            classTargets = listOf(ClassTypeTarget.REGULAR_CLASS),
+            packageTarget = listOf(PackageTarget(pattern = "com.project.common.dto")),
             sourceSets = listOf("commonMain", "jsMain"),
-        ),
+        )
     )
 }
 ```
@@ -95,7 +95,7 @@ kotlinMissingAnnotationsTherapist {
     annotations = [
             Annotate(
                     annotationsToAdd = [Annotation("kotlin.js.JsExport")],
-                    annotationsTarget = [AnnotationTarget.CLASS],
+                    classTargets = [ClassTypeTarget.REGULAR_CLASS],
                     packageTarget = [PackageTarget("com.project.common.dto")],
                     sourceSets = ["commonMain", "jsMain"]
             )
@@ -110,7 +110,7 @@ using the correct version of this plugin for your version of Kotlin. Check the t
 
 | Kotlin Version | Plugin Version |
 |----------------|----------------|
-| 2.0.21         | 0.0.1          |
+| 2.0.21         | 0.1.0          |
 | 2.1.0          | soon           |
 
 ## Kotlin IR
@@ -125,7 +125,7 @@ target {
 }
 ```
 
-A working example is will be provided soon
+Read the tests for use cases.
 
 A working example is [[available]](https://github.com/shalaga44/missing-annotations-therapist/tree/main/sample) in this repository in the
 sample directory.

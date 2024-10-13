@@ -40,10 +40,7 @@ data class PackageTarget(
   val pattern: String,
   val matchType: MatchType = MatchType.EXACT,
   val regex: String? = null,
-) {
-  val shortName: String = pattern.substringAfterLast(".")
-
-}
+)
 
 /**
  * Specifies conditions under which annotations should be applied.
@@ -52,7 +49,7 @@ data class PackageTarget(
  * @property annotationsAbsence Annotations that must be absent.
  * @property visibility Visibility modifier required (PUBLIC, PRIVATE, etc.).
  * @property modifiers Additional modifiers required (OPEN, FINAL, etc.).
- * @property namePattern Regex pattern that the nameAsString must match.
+ * @property namePattern Regex pattern that the name must match.
  * @property inheritance Conditions based on superclass and interfaces.
  * @property typeCondition Conditions based on type names (for properties).
  * @property customPredicate Custom logic for complex conditions.
@@ -71,7 +68,7 @@ data class Condition(
 /**
  * Defines inheritance-based conditions.
  *
- * @property superclass Fully qualified nameAsString of the required superclass.
+ * @property superclass Fully qualified name of the required superclass.
  * @property interfaces List of fully qualified names of required interfaces.
  */
 data class InheritanceCondition(
@@ -130,18 +127,76 @@ enum class Modifier {
 }
 
 /**
+ * Defines different types of class targets for annotations.
+ */
+enum class ClassTypeTarget {
+  REGULAR_CLASS,
+  ENUM_CLASS,
+  SEALED_CLASS,
+  DATA_CLASS,
+  OBJECT_CLASS,
+  ANNOTATION_CLASS,
+}
+
+/**
+ * Defines different function types for annotations.
+ */
+enum class FunctionTypeTarget {
+  FUNCTION,
+  SUSPEND_FUNCTION,
+  LAMBDA,
+  CONSTRUCTOR,
+}
+
+/**
+ * Defines different property targets for annotations.
+ */
+enum class PropertyTypeTarget {
+  PROPERTY,
+  FIELD,
+  LOCAL_VARIABLE,
+  VALUE_PARAMETER,
+  GETTER,
+  SETTER,
+}
+
+/**
+ * Defines type alias targets for annotations.
+ */
+enum class TypeAliasTarget {
+  TYPE_ALIAS,
+}
+
+/**
+ * Defines file-level targets for annotations.
+ */
+enum class FileTarget {
+  FILE,
+}
+
+/**
  * Represents an annotation addition rule.
  *
  * @property annotationsToAdd List of annotations to add.
- * @property annotationsTarget List of Kotlin annotation targets (CLASS, FUNCTION, PROPERTY, etc.).
+ * @property classTargets List of class types to apply annotations to.
+ * @property functionTargets List of function types to apply annotations to.
+ * @property propertyTargets List of property types to apply annotations to.
+ * @property typeAliasTargets List of type alias targets.
+ * @property fileTargets List of file targets.
  * @property packageTarget List of package targets where annotations should be applied.
  * @property moduleTarget List of module targets to include or exclude.
  * @property sourceSets List of source sets to apply the annotations to.
  * @property conditions List of conditions that must be met to apply the annotations.
+ * @property annotateNestedClasses If true, nested classes will also be annotated.
+ * @property annotateFieldClasses If true, field-referenced classes will also be annotated.
  */
 data class Annotate(
   var annotationsToAdd: List<Annotation>,
-  var annotationsTarget: List<AnnotationTarget> = listOf(),
+  var classTargets: List<ClassTypeTarget> = listOf(),
+  var functionTargets: List<FunctionTypeTarget> = listOf(),
+  var propertyTargets: List<PropertyTypeTarget> = listOf(),
+  var typeAliasTargets: List<TypeAliasTarget> = listOf(),
+  var fileTargets: List<FileTarget> = listOf(),
   var packageTarget: List<PackageTarget>,
   var moduleTarget: List<ModuleTarget> = listOf(),
   var sourceSets: List<String> = listOf(),
@@ -153,6 +208,6 @@ data class Annotate(
 /**
  * Gradle extension for configuring the MissingAnnotationsTherapist compiler plugin.
  */
-open class MissingAnnotationsTherapistGradleExtension {
+open class MissingAnnotationsTherapist {
   var annotations: List<Annotate> = listOf()
 }

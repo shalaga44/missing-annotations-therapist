@@ -14,17 +14,15 @@
  * limitations under the License.
  */
 
-package dev.shalaga44.mat
+package dev.shalaga44.mat.utils
 
 /**
  * Represents an annotation to be added.
  *
  * @property fqName Fully qualified name of the annotation.
- * @property parameters Key-value pairs for annotation parameters. Supports dynamic templates.
  */
 data class Annotation(
   val fqName: String,
-  val parameters: Map<String, String> = emptyMap(),
 ) {
   val shortName: String = fqName.substringAfterLast(".")
 }
@@ -40,9 +38,7 @@ data class PackageTarget(
   val pattern: String,
   val matchType: MatchType = MatchType.EXACT,
   val regex: String? = null,
-) {
-  val shortName: String = pattern.substringAfterLast(".")
-}
+)
 
 /**
  * Specifies conditions under which annotations should be applied.
@@ -104,7 +100,7 @@ data class ModuleTarget(
 enum class MatchType {
   EXACT,
   WILDCARD,
-  REGEX,
+  REGEX
 }
 
 /**
@@ -114,7 +110,7 @@ enum class Visibility {
   PUBLIC,
   PRIVATE,
   PROTECTED,
-  INTERNAL,
+  INTERNAL
 }
 
 /**
@@ -125,34 +121,91 @@ enum class Modifier {
   FINAL,
   ABSTRACT,
   SUSPEND,
+  PRIVATE,
+}
+
+/**
+ * Defines different types of class targets for annotations.
+ */
+enum class ClassTypeTarget {
+  REGULAR_CLASS,
+  ENUM_CLASS,
+  SEALED_CLASS,
+  DATA_CLASS,
+  OBJECT_CLASS,
+  ANNOTATION_CLASS,
+}
+
+/**
+ * Defines different function types for annotations.
+ */
+enum class FunctionTypeTarget {
+  FUNCTION,
+  SUSPEND_FUNCTION,
+  LAMBDA,
+  CONSTRUCTOR,
+}
+
+/**
+ * Defines different property targets for annotations.
+ */
+enum class PropertyTypeTarget {
+  PROPERTY,
+  FIELD,
+  LOCAL_VARIABLE,
+  VALUE_PARAMETER,
+  GETTER,
+  SETTER,
+}
+
+/**
+ * Defines type alias targets for annotations.
+ */
+enum class TypeAliasTarget {
+  TYPE_ALIAS,
+}
+
+/**
+ * Defines file-level targets for annotations.
+ */
+enum class FileTarget {
+  FILE,
 }
 
 /**
  * Represents an annotation addition rule.
  *
  * @property annotationsToAdd List of annotations to add.
- * @property annotationsTarget List of Kotlin annotation targets (CLASS, FUNCTION, PROPERTY, etc.).
+ * @property classTargets List of class types to apply annotations to.
+ * @property functionTargets List of function types to apply annotations to.
+ * @property propertyTargets List of property types to apply annotations to.
+ * @property typeAliasTargets List of type alias targets.
+ * @property fileTargets List of file targets.
  * @property packageTarget List of package targets where annotations should be applied.
  * @property moduleTarget List of module targets to include or exclude.
  * @property sourceSets List of source sets to apply the annotations to.
  * @property conditions List of conditions that must be met to apply the annotations.
- * @property annotateNestedClasses Should annotate nested classes.
- * @property annotateFieldClasses shouldAnnotateFieldClasses.
+ * @property annotateNestedClasses If true, nested classes will also be annotated.
+ * @property annotateFieldClasses If true, field-referenced classes will also be annotated.
  */
 data class Annotate(
   var annotationsToAdd: List<Annotation>,
-  var annotationsTarget: List<AnnotationTarget> = listOf(),
+  var classTargets: List<ClassTypeTarget> = listOf(),
+  var functionTargets: List<FunctionTypeTarget> = listOf(),
+  var propertyTargets: List<PropertyTypeTarget> = listOf(),
+  var typeAliasTargets: List<TypeAliasTarget> = listOf(),
+  var fileTargets: List<FileTarget> = listOf(),
   var packageTarget: List<PackageTarget>,
   var moduleTarget: List<ModuleTarget> = listOf(),
   var sourceSets: List<String> = listOf(),
   var conditions: List<Condition> = listOf(),
-  var annotateNestedClasses: Boolean = true,
-  var annotateFieldClasses: Boolean = true,
+  val annotateNestedClasses: Boolean = false,
+  val annotateFieldClasses: Boolean = false,
 )
 
 /**
  * Gradle extension for configuring the MissingAnnotationsTherapist compiler plugin.
  */
-open class MissingAnnotationsTherapistGradleExtension {
+open class MissingAnnotationsTherapist {
   var annotations: List<Annotate> = listOf()
 }
