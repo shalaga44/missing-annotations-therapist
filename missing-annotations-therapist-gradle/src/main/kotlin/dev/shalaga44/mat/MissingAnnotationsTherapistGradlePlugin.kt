@@ -18,7 +18,7 @@ class MissingAnnotationsTherapistGradlePlugin : KotlinCompilerPluginSupportPlugi
     const val COMPILER_PLUGIN_ID = "io.github.shalaga44.missing-annotations-therapist"
     const val PLUGIN_GROUP_ID = "io.github.shalaga44"
     const val PLUGIN_ARTIFACT_ID = "missing-annotations-therapist-plugin"
-    const val PLUGIN_VERSION = "0.0.1"
+    const val PLUGIN_VERSION = "0.0.2"
   }
 
   override fun apply(target: Project): Unit = with(target) {

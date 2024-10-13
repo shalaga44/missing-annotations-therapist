@@ -42,6 +42,7 @@ data class PackageTarget(
   val regex: String? = null,
 ) {
   val shortName: String = pattern.substringAfterLast(".")
+
 }
 
 /**
@@ -145,6 +146,8 @@ data class Annotate(
   var moduleTarget: List<ModuleTarget> = listOf(),
   var sourceSets: List<String> = listOf(),
   var conditions: List<Condition> = listOf(),
+  val annotateNestedClasses: Boolean = false,
+  val annotateFieldClasses: Boolean = false,
 )
 
 /**

@@ -16,8 +16,6 @@
 
 package dev.shalaga44.mat
 
-import kotlin.annotation.AnnotationTarget
-
 /**
  * Represents an annotation to be added.
  *
@@ -138,6 +136,8 @@ enum class Modifier {
  * @property moduleTarget List of module targets to include or exclude.
  * @property sourceSets List of source sets to apply the annotations to.
  * @property conditions List of conditions that must be met to apply the annotations.
+ * @property annotateNestedClasses Should annotate nested classes.
+ * @property annotateFieldClasses shouldAnnotateFieldClasses.
  */
 data class Annotate(
   var annotationsToAdd: List<Annotation>,
@@ -146,6 +146,8 @@ data class Annotate(
   var moduleTarget: List<ModuleTarget> = listOf(),
   var sourceSets: List<String> = listOf(),
   var conditions: List<Condition> = listOf(),
+  var annotateNestedClasses: Boolean = true,
+  var annotateFieldClasses: Boolean = true,
 )
 
 /**

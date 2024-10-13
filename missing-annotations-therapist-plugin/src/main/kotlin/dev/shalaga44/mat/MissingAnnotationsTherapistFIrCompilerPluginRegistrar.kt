@@ -8,7 +8,9 @@ import dev.shalaga44.mat.utils.Annotation
 import dev.shalaga44.mat.utils.Condition
 import dev.shalaga44.mat.utils.MatchType
 import dev.shalaga44.mat.utils.Modifier
+import dev.shalaga44.mat.utils.PackageTarget
 import dev.shalaga44.mat.utils.Visibility
+import org.jetbrains.kotlin.KtSourceElement
 import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.descriptors.Visibilities
@@ -20,6 +22,7 @@ import org.jetbrains.kotlin.fir.analysis.checkers.declaration.DeclarationChecker
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirPropertyChecker
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirRegularClassChecker
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirSimpleFunctionChecker
+import org.jetbrains.kotlin.fir.analysis.checkers.getContainingClassSymbol
 import org.jetbrains.kotlin.fir.analysis.checkers.hasModifier
 import org.jetbrains.kotlin.fir.analysis.extensions.FirAdditionalCheckersExtension
 import org.jetbrains.kotlin.fir.declarations.FirAnonymousInitializer
@@ -43,10 +46,12 @@ import org.jetbrains.kotlin.fir.expressions.FirAnnotation
 import org.jetbrains.kotlin.fir.expressions.builder.buildAnnotation
 import org.jetbrains.kotlin.fir.expressions.builder.buildAnnotationArgumentMapping
 import org.jetbrains.kotlin.fir.expressions.builder.buildLiteralExpression
+import org.jetbrains.kotlin.fir.expressions.impl.FirEmptyAnnotationArgumentMapping
 import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrar
 import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrarAdapter
 import org.jetbrains.kotlin.fir.extensions.FirExtensionSessionComponent
 import org.jetbrains.kotlin.fir.extensions.FirExtensionSessionComponent.Factory
+import org.jetbrains.kotlin.fir.resolve.fqName
 import org.jetbrains.kotlin.fir.resolve.getContainingClass
 import org.jetbrains.kotlin.fir.resolve.toSymbol
 import org.jetbrains.kotlin.fir.symbols.SymbolInternals
@@ -230,15 +235,86 @@ internal class MissingAnnotationsTherapistExtensionFirCheckersExtension(
       override val propertyCheckers: Set<FirPropertyChecker> =
         setOf(MissingAnnotationsTherapistPropertyChecker(session))
 
-      /*
-            override val variableCheckers: Set<FirVariableChecker> =
-              setOf(MissingAnnotationsTherapistVariableChecker)
-      */
     }
 
   class MissingAnnotationsTherapistClassChecker(
     val session: FirSession,
   ) : FirRegularClassChecker(MppCheckerKind.Common) {
+
+    fun annotateClassRecursively(
+      declaration: FirRegularClass,
+      session: FirSession,
+      annotateConfig: Annotate,
+      isNestedFromRecursion: Boolean = false,
+      isFieldReferenced: Boolean = false,
+    ) {
+      val component = session.myFirExtensionSessionComponent
+
+      val isNested = if (isNestedFromRecursion) true else isNestedClass(declaration, session)
+
+      if (isNested && !annotateConfig.annotateNestedClasses) {
+        if (component.enableLogging) {
+          println("Skipping annotation for nested class: ${declaration.nameAsString}")
+        }
+        return
+      }
+
+      if (isFieldReferenced && !annotateConfig.annotateFieldClasses) {
+        if (component.enableLogging) {
+          println("Skipping annotation for field-referenced class: ${declaration.nameAsString}")
+        }
+        return
+      }
+
+      if (component.shouldAnnotateClass(declaration)) {
+        applyAnnotations(declaration, session, annotateConfig)
+      }
+
+      declaration.declarations.filterIsInstance<FirRegularClass>().forEach { innerClass ->
+        annotateClassRecursively(innerClass, session, annotateConfig, isNestedFromRecursion = true)
+      }
+
+      declaration.declarations.filterIsInstance<FirProperty>().forEach { property ->
+        val propertyClass = getClassFromFieldType(property, session)
+        if (propertyClass != null) {
+          annotateClassRecursively(propertyClass, session, annotateConfig, isFieldReferenced = true)
+        }
+      }
+
+    }
+
+    @OptIn(SymbolInternals::class)
+    private fun getClassFromFieldType(property: FirProperty, session: FirSession): FirRegularClass? {
+      val type = property.returnTypeRef.coneType
+      val lookupTag = (type as? ConeClassLikeTypeImpl)?.lookupTag ?: return null
+      val classSymbol = lookupTag.toSymbol(session) ?: return null
+      return classSymbol.fir as? FirRegularClass
+    }
+
+    private fun applyAnnotations(
+      declaration: FirRegularClass,
+      session: FirSession,
+      annotateConfig: Annotate,
+    ) {
+      val existingAnnotationFqNames = declaration.annotations.map { it.fqName(session)?.asString()?.toClassId() }
+
+      val newAnnotations = annotateConfig.annotationsToAdd.filter { annotation ->
+        val fqName = annotation.toFqName().asString().toClassId()
+        if (fqName in existingAnnotationFqNames) {
+          if (session.myFirExtensionSessionComponent.enableLogging) {
+            println("Skipping duplicate annotation: $fqName for ${declaration.nameAsString}")
+          }
+          false
+        } else {
+          true
+        }
+      }.flatMap { it.toFirAnnotation(session, declaration) }
+
+      if (newAnnotations.isNotEmpty()) {
+        declaration.replaceAnnotations(declaration.annotations + newAnnotations)
+      }
+    }
+
     override fun check(
       declaration: FirRegularClass,
       context: CheckerContext,
@@ -247,51 +323,18 @@ internal class MissingAnnotationsTherapistExtensionFirCheckersExtension(
       val component = context.session.myFirExtensionSessionComponent
 
       if (component.enableLogging) {
-        println("ClassChecker: Checking class ${declaration.name}")
+        println("ClassChecker: Checking class ${declaration.nameAsString}")
       }
 
-      if (!component.shouldAnnotateClass(declaration)) {
-        if (component.enableLogging) {
-          println("ClassChecker: Skipping annotation for class ${declaration.name}")
-        }
-        return
-      }
-
-      val annotateConfigs = context.session.myFirExtensionSessionComponent.args.annotations
-        .filter { annotate ->
-          annotate.annotationsTarget.contains(AnnotationTarget.CLASS) &&
-            annotate.packageTarget.any { packageTarget ->
-              when (packageTarget.matchType) {
-                MatchType.EXACT -> declaration.classId.packageFqName.asString() == packageTarget.pattern
-                MatchType.WILDCARD -> declaration.classId.packageFqName.asString()
-                  .startsWith(packageTarget.pattern.removeSuffix("*"))
-
-                MatchType.REGEX -> declaration.classId.packageFqName.asString()
-                  .matches(Regex(packageTarget.regex ?: return@any false))
-              }
-            }
-        }
-
-      if (annotateConfigs.isEmpty()) {
-        if (component.enableLogging) {
-          println("ClassChecker: No annotation configurations matched for class ${declaration.name}")
-        }
-        return
-      }
-
-
-      annotateConfigs.forEach { annotate ->
-        if (evaluateConditions(declaration, annotate.conditions, context, session)) {
-          if (component.enableLogging) {
-            println("ClassChecker: Applying annotations to class ${declaration.name}: ${annotate.annotationsToAdd}")
+      val annotateConfigs = component.args.annotations.filter { annotate ->
+        annotate.annotationsTarget.contains(AnnotationTarget.CLASS) &&
+          annotate.packageTarget.any { packageTarget ->
+            packageTarget.match(declaration.classId.packageFqName.asString())
           }
-          val newAnnotations = annotate.annotationsToAdd.flatMap { it.toFirAnnotation(session, declaration) }
-          declaration.replaceAnnotations(declaration.annotations + newAnnotations)
-        } else {
-          if (component.enableLogging) {
-            println("ClassChecker: Conditions not met for annotations on class ${declaration.name}")
-          }
-        }
+      }
+
+      annotateConfigs.forEach { config ->
+        annotateClassRecursively(declaration, context.session, config)
       }
     }
   }
@@ -416,66 +459,17 @@ internal class MissingAnnotationsTherapistExtensionFirCheckersExtension(
     }
   }
 
-  /*
-    object MissingAnnotationsTherapistVariableChecker : FirVariableChecker(MppCheckerKind.Common) {
-      override fun check(
-        declaration: FirVariable,
-        context: CheckerContext,
-        reporter: DiagnosticReporter,
-      ) {
-        val component = context.session.myFirExtensionSessionComponent
-
-        if (component.enableLogging) {
-          println("VariableChecker: Checking variable ${declaration.nameAsString}")
-        }
-
-        if (!component.shouldAnnotateVariable(declaration)) {
-          if (component.enableLogging) {
-            println("VariableChecker: Skipping annotation for variable ${declaration.nameAsString}")
-          }
-          return
-        }
-
-        val annotateConfigs = context.session.myFirExtensionSessionComponent.args.annotations
-          .filter { annotate ->
-            annotate.annotationsTarget.contains(AnnotationTarget.LOCAL_VARIABLE) &&
-              annotate.packageTarget.any { packageTarget ->
-                when (packageTarget.matchType) {
-                  MatchType.EXACT -> declaration.nameAsString.asString().startsWith(packageTarget.pattern)
-                  MatchType.WILDCARD -> declaration.nameAsString.asString()
-                    .startsWith(packageTarget.pattern.removeSuffix("*"))
-                  MatchType.REGEX -> declaration.nameAsString.asString()
-                    .matches(Regex(packageTarget.regex ?: return@filter false))
-                }
-              }
-          }
-
-        if (annotateConfigs.isEmpty()) {
-          if (component.enableLogging) {
-            println("VariableChecker: No annotation configurations matched for variable ${declaration.nameAsString}")
-          }
-          return
-        }
-
-        
-        annotateConfigs.forEach { annotate ->
-          if (evaluateConditions(declaration, annotate.conditions, context)) {
-            if (component.enableLogging) {
-              println("VariableChecker: Applying annotations to variable ${declaration.nameAsString}: ${annotate.annotationsToAdd}")
-            }
-            val newAnnotations = annotate.annotationsToAdd.flatMap { it.toFirAnnotation() }
-            declaration.replaceAnnotations(declaration.annotations + newAnnotations)
-          } else {
-            if (component.enableLogging) {
-              println("VariableChecker: Conditions not met for annotations on variable ${declaration.nameAsString}")
-            }
-          }
-        }
-      }
-    }
-  */
 
 }
+
+fun PackageTarget.match(packageName: String): Boolean {
+  return when (matchType) {
+    MatchType.EXACT -> packageName == pattern
+    MatchType.WILDCARD -> packageName.startsWith(pattern.removeSuffix("*"))
+    MatchType.REGEX -> regex?.let { Regex(it).matches(packageName) } ?: false
+  }
+}
+
 
 @OptIn(SymbolInternals::class)
 private fun <T : FirDeclaration> evaluateConditions(
@@ -644,6 +638,7 @@ private fun Annotation.toFirAnnotation(session: FirSession, declaration: FirDecl
       fqName = this.toFqName(),
       parameters = parameters,
       declarationName = declaration.nameAsString,
+      declarationSource = declaration.source ?: error("Declaration source must not be null"),
       session = session,
     ),
   )
@@ -658,8 +653,10 @@ fun createFirAnnotation(
   fqName: FqName,
   parameters: Map<String, String>,
   declarationName: String,
+  declarationSource: KtSourceElement,
   session: FirSession,
 ): FirAnnotation = buildAnnotation {
+
   annotationTypeRef = buildResolvedTypeRef {
     type = ConeClassLikeTypeImpl(
       lookupTag = ConeClassLikeLookupTagImpl(ClassId.topLevel(fqName)),
@@ -667,22 +664,29 @@ fun createFirAnnotation(
       isNullable = false,
     )
   }
-  argumentMapping = buildAnnotationArgumentMapping {
-    parameters.forEach { (key, value) ->
-      val processedValue = value.replace("{className}", declarationName)
-      val name = Name.identifier(key)
-      mapping[name] = buildLiteralExpression(
-        source = null,
-        kind = org.jetbrains.kotlin.types.ConstantValueKind.String,
-        value = processedValue,
-        setType = true,
-      )
 
+  val parametersFinal: Map<String, String> = emptyMap()/*parameters*/
+  argumentMapping = parametersFinal.ifEmpty { null }?.let {
+    buildAnnotationArgumentMapping {
+      it.forEach { (key, value) ->
+        val processedValue = value.replace("{className}", declarationName)
+        val name = Name.identifier(key)
+        mapping[name] = buildLiteralExpression(
+          source = declarationSource,
+          kind = org.jetbrains.kotlin.types.ConstantValueKind.String,
+          value = processedValue,
+          setType = true,
+        )
+      }
     }
-  }
+  } ?: FirEmptyAnnotationArgumentMapping
 
 }
 
 public inline fun String.toClassId(): ClassId = FqName(this).run { ClassId(parent(), shortName()) }
 
 
+private fun isNestedClass(declaration: FirRegularClass, session: FirSession): Boolean {
+  val containingClass = declaration.symbol.getContainingClassSymbol(session)
+  return containingClass != null
+}

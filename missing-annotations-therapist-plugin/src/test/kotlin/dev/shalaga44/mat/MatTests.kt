@@ -1,5 +1,6 @@
 package dev.shalaga44.mat
 
+import com.tschuchort.compiletesting.SourceFile
 import dev.shalaga44.mat.utils.Annotate
 import dev.shalaga44.mat.utils.Annotation
 import dev.shalaga44.mat.utils.Condition
@@ -9,7 +10,6 @@ import dev.shalaga44.mat.utils.Modifier
 import dev.shalaga44.mat.utils.PackageTarget
 import dev.shalaga44.mat.utils.TypeCondition
 import dev.shalaga44.mat.utils.Visibility
-import com.tschuchort.compiletesting.SourceFile
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
@@ -428,15 +428,10 @@ class MatTests {
           MissingAnnotationsTherapistArgs(
             annotations = listOf(
               Annotate(
-                annotationsToAdd = listOf(
-                  Annotation(fqName = "com.project.NestedClassAnnotation"),
-                ),
-                annotationsTarget = listOf(
-                  AnnotationTarget.CLASS,
-                ),
-                packageTarget = listOf(
-                  PackageTarget(pattern = "com.project"),
-                ),
+                  annotationsToAdd = listOf(Annotation(fqName = "com.project.NestedClassAnnotation")),
+                  annotationsTarget = listOf(AnnotationTarget.CLASS),
+                  packageTarget = listOf(PackageTarget(pattern = "com.project")),
+                  annotateNestedClasses = true,
               ),
             ),
           ),
@@ -695,4 +690,136 @@ class MatTests {
       ),
     )
   }
+
+  @Test
+  fun `annotate nested and field-referenced classes using configuration`() {
+    val annotation = annotationFile("TestAnnotation.kt", "com.project", "TestAnnotation")
+
+    val mainSource = """
+        package com.project
+        import kotlin.test.assertTrue
+
+        class Outer {
+            class Inner
+            val field: Inner = Inner()
+        }
+
+        fun main() { 
+            val innerAnnotations = Outer.Inner::class.annotations.map { it.annotationClass.simpleName }
+            val fieldAnnotations = Outer().field::class.annotations.map { it.annotationClass.simpleName }
+
+            assertTrue(innerAnnotations.contains("TestAnnotation"))
+            assertTrue(fieldAnnotations.contains("TestAnnotation"))
+        }
+    """.trimIndent()
+
+    run(
+      mainSource = mainSource,
+      additionalSources = listOf(annotation),
+      mainApplication = "com.project.MainKt",
+      compilerPluginRegistrars = arrayOf(
+        MissingAnnotationsTherapistCompilerPluginRegistrar(
+          MissingAnnotationsTherapistArgs(
+            annotations = listOf(
+              Annotate(
+                annotationsToAdd = listOf(
+                  Annotation(fqName = "com.project.TestAnnotation"),
+                ),
+                annotationsTarget = listOf(AnnotationTarget.CLASS),
+                packageTarget = listOf(PackageTarget(pattern = "com.project")),
+                annotateNestedClasses = true,
+                annotateFieldClasses = true,
+              ),
+            ),
+          ),
+        ),
+      ),
+    )
+  }
+
+  @Test
+  fun `do not annotate nested and field-referenced classes using configuration`() {
+    val annotation = annotationFile("TestAnnotation.kt", "com.project", "TestAnnotation")
+
+    val mainSource = """
+        package com.project
+        import kotlin.test.assertTrue
+
+        class Outer {
+            class Inner
+            val field: Inner = Inner()
+        }
+
+        fun main() { 
+            val innerAnnotations = Outer.Inner::class.annotations.map { it.annotationClass.simpleName }
+            val fieldAnnotations = Outer().field::class.annotations.map { it.annotationClass.simpleName }
+            
+            assertTrue(!innerAnnotations.contains("TestAnnotation"), "innerAnnotations must not be annotated") 
+            assertTrue(!fieldAnnotations.contains("TestAnnotation"), "fieldAnnotations must not be annotated")
+        }
+    """.trimIndent()
+
+    run(
+      mainSource = mainSource,
+      additionalSources = listOf(annotation),
+      mainApplication = "com.project.MainKt",
+      compilerPluginRegistrars = arrayOf(
+        MissingAnnotationsTherapistCompilerPluginRegistrar(
+          MissingAnnotationsTherapistArgs(
+            annotations = listOf(
+              Annotate(
+                annotationsToAdd = listOf(
+                  Annotation(fqName = "com.project.TestAnnotation"),
+                ),
+                annotationsTarget = listOf(AnnotationTarget.CLASS),
+                packageTarget = listOf(PackageTarget(pattern = "com.project")),
+                annotateNestedClasses = false,
+                annotateFieldClasses = false,
+              ),
+            ),
+          ),
+        ),
+      ),
+    )
+  }
+
+  @Test
+  fun `ensure duplicate annotations are not applied`() {
+    val annotation = annotationFile("TestAnnotation.kt", "com.project", "TestAnnotation")
+
+    val mainSource = """
+        package com.project
+        import kotlin.test.assertEquals
+
+        class Outer {
+            class Inner
+        }
+
+        fun main() { 
+            val annotations = Outer.Inner::class.annotations.filter { it.annotationClass.simpleName == "TestAnnotation" }
+            assertEquals(1, annotations.size)  
+        }
+    """.trimIndent()
+
+    run(
+        mainSource = mainSource,
+        additionalSources = listOf(annotation),
+        mainApplication = "com.project.MainKt",
+        compilerPluginRegistrars = arrayOf(
+            MissingAnnotationsTherapistCompilerPluginRegistrar(
+                MissingAnnotationsTherapistArgs(
+                    annotations = listOf(
+                        Annotate(
+                            annotationsToAdd = listOf(Annotation(fqName = "com.project.TestAnnotation")),
+                            annotationsTarget = listOf(AnnotationTarget.CLASS),
+                            packageTarget = listOf(PackageTarget(pattern = "com.project")),
+                            annotateNestedClasses = true,
+                        ),
+                    ),
+                ),
+            ),
+        ),
+    )
+  }
 }
+

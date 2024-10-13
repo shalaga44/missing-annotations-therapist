@@ -13,7 +13,7 @@ plugins {
 
 allprojects {
   group = "io.github.shalaga44"
-  version = "0.0.1"
+  version = "0.0.2"
 
   repositories {
     mavenCentral()
