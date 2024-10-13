@@ -654,7 +654,7 @@ private fun dev.shalaga44.mat.utils.Annotation.toFirAnnotation(session: FirSessi
   return listOf(
     createFirAnnotation(
       fqName = this.toFqName(),
-      parameters = parameters?: emptyMap(),
+      parameters = /*parameters?:*/ emptyMap(),
       declarationName = declaration.nameAsString,
       declarationSource = declaration.source ?: error("Declaration source must not be null"),
       session = session,
