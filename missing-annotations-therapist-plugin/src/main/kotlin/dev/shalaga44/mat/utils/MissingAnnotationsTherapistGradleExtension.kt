@@ -209,4 +209,5 @@ data class Annotate(
  */
 open class MissingAnnotationsTherapist {
   var annotations: List<Annotate> = listOf()
+  var enableLogging: Boolean = false
 }

@@ -19,7 +19,18 @@ package dev.shalaga44.mat
 import com.google.auto.service.AutoService
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import dev.shalaga44.mat.utils.*
+import dev.shalaga44.mat.utils.Annotate
+import dev.shalaga44.mat.utils.ClassTypeTarget
+import dev.shalaga44.mat.utils.Condition
+import dev.shalaga44.mat.utils.FileTarget
+import dev.shalaga44.mat.utils.FunctionTypeTarget
+import dev.shalaga44.mat.utils.MatchType
+import dev.shalaga44.mat.utils.MissingAnnotationsTherapist
+import dev.shalaga44.mat.utils.Modifier
+import dev.shalaga44.mat.utils.PackageTarget
+import dev.shalaga44.mat.utils.PropertyTypeTarget
+import dev.shalaga44.mat.utils.TypeAliasTarget
+import dev.shalaga44.mat.utils.Visibility
 import org.jetbrains.kotlin.KtSourceElement
 import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
 import org.jetbrains.kotlin.config.CompilerConfiguration
@@ -28,11 +39,28 @@ import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
 import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.analysis.checkers.MppCheckerKind
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
-import org.jetbrains.kotlin.fir.analysis.checkers.declaration.*
+import org.jetbrains.kotlin.fir.analysis.checkers.declaration.DeclarationCheckers
+import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirPropertyChecker
+import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirRegularClassChecker
+import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirSimpleFunctionChecker
 import org.jetbrains.kotlin.fir.analysis.checkers.getContainingClassSymbol
 import org.jetbrains.kotlin.fir.analysis.checkers.hasModifier
 import org.jetbrains.kotlin.fir.analysis.extensions.FirAdditionalCheckersExtension
-import org.jetbrains.kotlin.fir.declarations.*
+import org.jetbrains.kotlin.fir.declarations.FirAnonymousInitializer
+import org.jetbrains.kotlin.fir.declarations.FirCallableDeclaration
+import org.jetbrains.kotlin.fir.declarations.FirClass
+import org.jetbrains.kotlin.fir.declarations.FirCodeFragment
+import org.jetbrains.kotlin.fir.declarations.FirDanglingModifierList
+import org.jetbrains.kotlin.fir.declarations.FirDeclaration
+import org.jetbrains.kotlin.fir.declarations.FirFile
+import org.jetbrains.kotlin.fir.declarations.FirProperty
+import org.jetbrains.kotlin.fir.declarations.FirRegularClass
+import org.jetbrains.kotlin.fir.declarations.FirScript
+import org.jetbrains.kotlin.fir.declarations.FirSimpleFunction
+import org.jetbrains.kotlin.fir.declarations.FirTypeAlias
+import org.jetbrains.kotlin.fir.declarations.FirTypeParameter
+import org.jetbrains.kotlin.fir.declarations.FirVariable
+import org.jetbrains.kotlin.fir.declarations.hasAnnotation
 import org.jetbrains.kotlin.fir.declarations.utils.classId
 import org.jetbrains.kotlin.fir.declarations.utils.superConeTypes
 import org.jetbrains.kotlin.fir.expressions.FirAnnotation
@@ -65,22 +93,26 @@ class MissingAnnotationsTherapistCompilerPluginRegistrar(
 ) : CompilerPluginRegistrar() {
 
   override fun ExtensionStorage.registerExtensions(configuration: CompilerConfiguration) {
-    val configJson = configuration[KEY_CONFIG] ?: "[]"
-    val enableLogging = args?.enableLogging ?: configuration[KEY_ENABLE_LOGGING]?.toBoolean() ?: false
+    val configJson = configuration[KEY_CONFIG] ?: "{}"
+    val gson = Gson()
+    val type = object : TypeToken<MissingAnnotationsTherapist>() {}.type
+    val gradleExtension = gson.fromJson<MissingAnnotationsTherapist?>(configJson, type)
+    val annotations = gradleExtension?.annotations?.ifEmpty { null } ?: args?.annotations ?: return
 
+    val pluginArgs = args ?: MissingAnnotationsTherapistArgs(
+      annotations = annotations,
+      enableLogging = gradleExtension.enableLogging,
+    )
+
+    val enableLogging = pluginArgs.enableLogging
     if (enableLogging) {
       System.err.println("FirMissingAnnotationsTherapistCompilerPluginRegistrar: Starting registration")
       System.err.println("Configuration JSON: $configJson")
       System.err.println("Logging is enabled")
     }
 
-    val gson = Gson()
-    val type = object : TypeToken<List<Annotate>>() {}.type
-    val annotations: List<Annotate>? = gson.fromJson<List<Annotate>?>(configJson, type).ifEmpty { null }
-    val pluginArgs = args ?: MissingAnnotationsTherapistArgs(annotations ?: return, enableLogging)
-
     if (enableLogging) {
-      System.err.println("Parsed annotations: $annotations")
+      System.err.println("Parsed annotations: $gradleExtension")
       System.err.println("Parsed pluginArgs: $pluginArgs")
     }
 
@@ -549,6 +581,7 @@ private fun <T : FirDeclaration> evaluateConditions(
         is FirRegularClass ->
           declaration.superConeTypes.map { it }
             .mapNotNull { it.lookupTag.toSymbol(session)?.fir?.classId }
+
         else -> emptyList()
       }
       val matches = superclassFqName?.let { actualSuperclasses.contains(it) } ?: true
@@ -650,7 +683,10 @@ private fun <T> declarationHasAnnotation(declaration: T, fqName: String, session
   }
 }
 
-private fun dev.shalaga44.mat.utils.Annotation.toFirAnnotation(session: FirSession, declaration: FirDeclaration): List<FirAnnotation> {
+private fun dev.shalaga44.mat.utils.Annotation.toFirAnnotation(
+  session: FirSession,
+  declaration: FirDeclaration,
+): List<FirAnnotation> {
   return listOf(
     createFirAnnotation(
       fqName = this.toFqName(),
