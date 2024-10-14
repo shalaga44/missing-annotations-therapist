@@ -186,6 +186,7 @@ enum class FileTarget {
  * @property moduleTarget List of module targets to include or exclude.
  * @property sourceSets List of source sets to apply the annotations to.
  * @property conditions List of conditions that must be met to apply the annotations.
+ * @property annotateNestedClassesNormallyInPackage If false, only top level classes in package will be annotated.
  * @property annotateNestedClassesRecursively If true, nested classes will also be annotated.
  * @property annotateFieldClassesRecursively If true, field-referenced classes will also be annotated.
  */
@@ -200,6 +201,7 @@ data class Annotate(
   var moduleTarget: List<ModuleTarget> = listOf(),
   var sourceSets: List<String> = listOf(),
   var conditions: List<Condition> = listOf(),
+  val annotateNestedClassesNormallyInPackage: Boolean = true,
   val annotateNestedClassesRecursively: Boolean = false,
   val annotateFieldClassesRecursively: Boolean = false,
 )

@@ -747,6 +747,7 @@ class MatTests {
                 ),
                 classTargets = listOf(ClassTypeTarget.REGULAR_CLASS),
                 packageTarget = listOf(PackageTarget(pattern = "com.project")),
+                annotateNestedClassesNormallyInPackage = false,
                 annotateNestedClassesRecursively = false,
                 annotateFieldClassesRecursively = false,
               ),
