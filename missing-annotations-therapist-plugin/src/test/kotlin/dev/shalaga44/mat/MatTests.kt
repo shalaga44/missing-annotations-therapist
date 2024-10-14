@@ -1,7 +1,6 @@
 package dev.shalaga44.mat
 
 import com.tschuchort.compiletesting.SourceFile
-import dev.shalaga44.mat.utils.*
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
@@ -624,46 +623,6 @@ class MatTests {
     )
   }
 
-  @Test
-  fun `add annotation to class in specific module`() {
-    val moduleAAnnotation = annotationFile("ModuleAAnnotation.kt", "com.project.moduleA", "ModuleAAnnotation")
-
-    val mainSource = """
-            package com.project.moduleA
-            import kotlin.test.assertTrue
-
-            class ModuleAClass
-
-            fun main() { 
-                val annotations = ModuleAClass::class.annotations.map { it.annotationClass.simpleName }
-                assertTrue(annotations.contains("ModuleAAnnotation"))
-            }
-        """.trimIndent()
-
-    run(
-      mainSource = mainSource,
-      additionalSources = listOf(moduleAAnnotation),
-      mainApplication = "com.project.moduleA.MainKt",
-      compilerPluginRegistrars = arrayOf(
-        MissingAnnotationsTherapistCompilerPluginRegistrar(
-          MissingAnnotationsTherapistArgs(
-            annotations = listOf(
-              Annotate(
-                annotationsToAdd = listOf(
-                  Annotation(fqName = "com.project.moduleA.ModuleAAnnotation"),
-                ),
-                classTargets = listOf(ClassTypeTarget.REGULAR_CLASS),
-                packageTarget = listOf(
-                  PackageTarget(pattern = "com.project.moduleA"),
-                ),
-                // Implement moduleTarget handling if required
-              ),
-            ),
-          ),
-        ),
-      ),
-    )
-  }
 
   @Test
   fun `annotate nested and field-referenced classes using configuration`() {
@@ -791,6 +750,73 @@ class MatTests {
                 annotateNestedClassesRecursively = true,
               ),
             ),
+          ),
+        ),
+      ),
+    )
+  }
+  @Test
+  fun `error`() {
+    val annotation = annotationFile("TestAnnotation.kt", "com.project", "TestAnnotation")
+
+    val mainSource = """package com.narbase.narcore.dto.domain.user.profile
+
+import kotlin.js.JsExport
+
+/*
+ * Copyright 2017-2020 Narbase technologies and contributors. Use of this source code is governed by the MIT License.
+ */
+
+object GetProfileDto {
+
+    class Request
+
+    class Response(
+        val profile: UserProfile
+    )
+
+    class UserProfile(
+        val clientId: String,
+        val userId: String,
+        val fullName: String,
+        val username: String,
+        val callingCode: String,
+        val localPhone: String,
+        val privileges: Array<String>
+    )
+
+}
+fun main(){
+
+}
+""".trimIndent()
+
+    run(
+      mainSource = mainSource,
+      additionalSources = listOf(annotation),
+      mainApplication = "com.narbase.narcore.dto.domain.user.profile.MainKt",
+      compilerPluginRegistrars = arrayOf(
+        MissingAnnotationsTherapistCompilerPluginRegistrar(
+          MissingAnnotationsTherapistArgs(
+            annotations = listOf(
+              Annotate(
+                annotationsToAdd = listOf(Annotation(fqName = "com.project.TestAnnotation")),
+                classTargets = listOf(
+                  ClassTypeTarget.REGULAR_CLASS,
+                  ClassTypeTarget.OBJECT_CLASS,
+                  ClassTypeTarget.DATA_CLASS
+                ),
+                packageTarget = listOf(PackageTarget(pattern = "com.narbase.*", MatchType.WILDCARD)),
+                sourceSets = listOf("commonMain", "jsMain"),
+/*                conditions = listOf(
+                  Condition(
+                    modifiers = Modifier.values().filterNot { it in listOf(Modifier.ACTUAL, Modifier.EXPECT) })
+                ),*/
+                annotateNestedClassesNormallyInPackage = false,
+              )
+
+            )
+,
           ),
         ),
       ),

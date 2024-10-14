@@ -4,7 +4,7 @@ package dev.shalaga44.mat
 
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import dev.shalaga44.mat.utils.MissingAnnotationsTherapist
+import dev.shalaga44.mat.MissingAnnotationsTherapist
 import org.gradle.api.Project
 import org.gradle.api.provider.Provider
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation

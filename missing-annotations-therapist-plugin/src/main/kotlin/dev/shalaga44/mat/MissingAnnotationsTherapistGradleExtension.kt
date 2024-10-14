@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package dev.shalaga44.mat.utils
+package dev.shalaga44.mat
 
 /**
  * Represents an annotation to be added.
@@ -118,23 +118,60 @@ enum class Visibility {
  * Defines additional modifiers for conditions.
  */
 enum class Modifier {
+  ABSTRACT,
   OPEN,
   FINAL,
-  ABSTRACT,
+  SEALED,
+  DATA,
+  ENUM,
+  INTERFACE,
+  OBJECT,
+  COMPANION,
+  CONST,
+  LATEINIT,
+  INLINE,
+  NOINLINE,
+  CROSSINLINE,
+  REIFIED,
+  TAILREC,
   SUSPEND,
+  OPERATOR,
+  INFIX,
+  EXTERNAL,
+  ANNOTATION,
+  VARARG,
+  OVERRIDE,
+  EXPECT,
+  ACTUAL,
+  PUBLIC,
   PRIVATE,
+  PROTECTED,
+  INTERNAL
 }
 
 /**
  * Defines different types of class targets for annotations.
  */
 enum class ClassTypeTarget {
-  REGULAR_CLASS,
-  ENUM_CLASS,
-  SEALED_CLASS,
-  DATA_CLASS,
-  OBJECT_CLASS,
-  ANNOTATION_CLASS,
+  REGULAR_CLASS,          // Standard class declarations.
+  ENUM_CLASS,             // Enum classes.
+  SEALED_CLASS,           // Sealed classes.
+  DATA_CLASS,             // Data classes.
+  OBJECT_CLASS,           // Object declarations (singletons).
+  ANNOTATION_CLASS,       // Annotation classes.
+  INTERFACE_CLASS,        // Interface declarations.
+  COMPANION_OBJECT_CLASS, // Companion objects within classes.
+  LOCAL_CLASS,            // Classes declared within functions or local scopes.
+  ANONYMOUS_CLASS,        // Anonymous classes (e.g., object expressions).
+  ABSTRACT_CLASS,         // Abstract classes (regular classes with the 'abstract' modifier).
+  OPEN_CLASS,             // Open classes (regular classes with the 'open' modifier).
+  FINAL_CLASS,            // Final classes (regular classes with the 'final' modifier).
+  INNER_CLASS,            // Inner classes within outer classes.
+  NESTED_CLASS,           // Nested classes within outer classes.
+  EXPECT_CLASS,           // Expect classes within outer classes.
+  ACTUAL_CLASS,           // Actual classes within outer classes.
+  INLINE_CLASS,           // inline (old) classes within outer classes.
+  VALUE_CLASS,            // Value classes within outer classes.
 }
 
 /**
