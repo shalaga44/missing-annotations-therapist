@@ -305,14 +305,14 @@ internal class MissingAnnotationsTherapistExtensionFirCheckersExtension(
 
       val isNested = if (isNestedFromRecursion) true else isNestedClass(declaration, session)
 
-      if (isNested && !annotateConfig.annotateNestedClasses) {
+      if (isNested && !annotateConfig.annotateNestedClassesRecursively) {
         if (component.enableLogging) {
           println("Skipping annotation for nested class: ${declaration.nameAsString}")
         }
         return
       }
 
-      if (isFieldReferenced && !annotateConfig.annotateFieldClasses) {
+      if (isFieldReferenced && !annotateConfig.annotateFieldClassesRecursively) {
         if (component.enableLogging) {
           println("Skipping annotation for field-referenced class: ${declaration.nameAsString}")
         }
