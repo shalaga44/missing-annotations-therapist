@@ -52,7 +52,7 @@ class MissingAnnotationsTherapistGradlePlugin : KotlinCompilerPluginSupportPlugi
       .create()
 
     return project.provider {
-      val configJson = gson.toJson(extension.annotations)
+      val configJson = gson.toJson(extension)
 
       val encodedJson = Base64.getEncoder().encodeToString(configJson.toByteArray(Charsets.UTF_8))
 
