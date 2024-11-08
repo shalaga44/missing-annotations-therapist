@@ -5,7 +5,7 @@
 
 > [!IMPORTANT]
 > It's working now! but still a FIRST draft!,
-> so think twice before using it be careful.
+> so think twice before using it! be careful.
 
 
 Kotlin Compiler Plugin that automatically adds missing annotations to your codebase based on configurable criteria. This
